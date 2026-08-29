@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Smart — Bacterial Genetics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c101c;
+  --panel:#141b2e;
+  --panel2:#1a2340;
+  --panel3:#101627;
+  --text:#e9ecf6;
+  --muted:#8b93ab;
+  --accent:#9b7bf0;
+  --accent2:#6f8cf0;
+  --A:#f2b84b;
+  --T:#4bd68c;
+  --C:#f2685c;
+  --G:#5fa8f2;
+  --border:rgba(255,255,255,0.09);
+  --good:#4bd68c;
+  --bad:#f2685c;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse at top left, rgba(155,123,240,0.10), transparent 45%),
+    radial-gradient(ellipse at bottom right, rgba(111,140,240,0.09), transparent 45%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+}
+.mono{font-family:'JetBrains Mono',monospace;}
+h1,h2,h3,.display{font-family:'Fraunces',serif;}
+
+/* ===== Top bar ===== */
+header.top{
+  position:sticky; top:0; z-index:50;
+  backdrop-filter:blur(10px);
+  background:rgba(12,16,28,0.85);
+  border-bottom:1px solid var(--border);
+}
+.top-inner{
+  max-width:1180px; margin:0 auto; padding:14px 22px;
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+}
+.brand{display:flex; align-items:center; gap:12px;}
+.helix-mark{width:34px; height:34px; position:relative; flex-shrink:0;}
+.helix-mark span{
+  position:absolute; left:50%; top:50%; width:22px; height:3px; border-radius:2px;
+  transform-origin:center;
+  animation:spin 3.2s linear infinite;
+}
+.helix-mark span:nth-child(1){background:var(--A); animation-delay:0s;}
+.helix-mark span:nth-child(2){background:var(--T); animation-delay:-0.8s;}
+.helix-mark span:nth-child(3){background:var(--C); animation-delay:-1.6s;}
+.helix-mark span:nth-child(4){background:var(--G); animation-delay:-2.4s;}
+@keyframes spin{
+  0%{transform:translate(-50%,-50%) rotate(0deg) scaleX(1);}
+  50%{transform:translate(-50%,-50%) rotate(180deg) scaleX(0.25);}
+  100%{transform:translate(-50%,-50%) rotate(360deg) scaleX(1);}
+}
+.brand-text .name{font-family:'Fraunces',serif; font-weight:700; font-size:1.25rem; letter-spacing:0.2px;}
+.brand-text .sub{font-size:0.68rem; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase;}
+
+nav.tabs{display:flex; gap:4px; flex-wrap:wrap;}
+nav.tabs button{
+  background:transparent; border:1px solid transparent; color:var(--muted);
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.82rem;
+  padding:9px 14px; border-radius:9px; cursor:pointer; transition:all .18s ease;
+  display:flex; align-items:center; gap:7px; white-space:nowrap;
+}
+nav.tabs button:hover{color:var(--text); background:rgba(255,255,255,0.04);}
+nav.tabs button.active{
+  color:#fff; background:linear-gradient(135deg, rgba(155,123,240,0.22), rgba(111,140,240,0.16));
+  border-color:rgba(155,123,240,0.35);
+}
+nav.tabs .dot{width:6px; height:6px; border-radius:50%; flex-shrink:0;}
+
+/* ===== Hero ===== */
+.hero{
+  max-width:1180px; margin:0 auto; padding:40px 22px 18px; text-align:center;
+}
+.hero h1{font-size:2.6rem; font-weight:700; margin:0 0 8px; line-height:1.1;}
+.hero h1 .accent{
+  background:linear-gradient(90deg,var(--A),var(--T),var(--C),var(--G));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.hero p{color:var(--muted); max-width:560px; margin:0 auto; font-size:0.95rem;}
+.seq-strip{
+  display:flex; justify-content:center; gap:6px; margin:22px 0 4px; flex-wrap:wrap;
+}
+.seq-strip span{
+  font-family:'JetBrains Mono',monospace; font-weight:700; font-size:0.95rem;
+  width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+  border-radius:7px; color:#0c101c; animation:bob 2.6s ease-in-out infinite;
+}
+.seq-strip span:nth-child(4n+1){background:var(--A); animation-delay:0s;}
+.seq-strip span:nth-child(4n+2){background:var(--T); animation-delay:0.15s;}
+.seq-strip span:nth-child(4n+3){background:var(--C); animation-delay:0.3s;}
+.seq-strip span:nth-child(4n+4){background:var(--G); animation-delay:0.45s;}
+@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+
+/* ===== Main layout ===== */
+main{max-width:1180px; margin:0 auto; padding:10px 22px 70px;}
+.section{display:none; animation:fadein .35s ease;}
+.section.active{display:block;}
+@keyframes fadein{from{opacity:0; transform:translateY(6px);}to{opacity:1; transform:translateY(0);}}
+
+.section-head{margin:22px 0 20px;}
+.section-head .eyebrow{
+  color:var(--accent); font-size:0.72rem; letter-spacing:2px; text-transform:uppercase; font-weight:700;
+}
+.section-head h2{font-size:1.7rem; margin:6px 0 4px;}
+.section-head p{color:var(--muted); font-size:0.9rem; margin:0; max-width:640px;}
+
+/* ===== Overview ===== */
+.law-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px;}
+.law-card{
+  background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px 18px 16px;
+  position:relative; overflow:hidden;
+}
+.law-card::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+}
+.law-card.a::before{background:var(--A);} .law-card.t::before{background:var(--T);}
+.law-card.c::before{background:var(--C);} .law-card.g::before{background:var(--G);}
+.law-card h4{margin:0 0 8px; font-size:0.98rem; font-family:'Fraunces',serif;}
+.law-card p{margin:0; font-size:0.85rem; color:#c4cae0; line-height:1.5;}
+.law-card .tag{
+  display:inline-block; font-family:'JetBrains Mono',monospace; font-size:0.65rem;
+  color:var(--muted); letter-spacing:1px; margin-bottom:6px; text-transform:uppercase;
+}
+
+/* ===== Diagrams ===== */
+.diagram-nav{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
+.diagram-nav button{
+  background:var(--panel); border:1px solid var(--border); color:var(--muted);
+  padding:8px 14px; border-radius:20px; font-size:0.8rem; font-weight:600; cursor:pointer;
+}
+.diagram-nav button.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+.diagram-panel{
+  background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:26px;
+  display:none;
+}
+.diagram-panel.active{display:block;}
+
+/* nucleotide diagram */
+.nuc-wrap{display:flex; gap:30px; flex-wrap:wrap; align-items:flex-start;}
+.nuc-visual{display:flex; flex-direction:column; align-items:center; gap:0; flex-shrink:0;}
+.nuc-part{
+  cursor:pointer; border:2px solid var(--border); border-radius:10px; padding:12px 20px;
+  text-align:center; font-weight:700; font-size:0.85rem; transition:.15s; margin-bottom:8px;
+  min-width:140px;
+}
+.nuc-part:hover{transform:scale(1.03);}
+.nuc-part.base{background:rgba(242,184,75,0.14); border-color:var(--A); color:var(--A);}
+.nuc-part.sugar{background:rgba(95,168,242,0.14); border-color:var(--G); color:var(--G); clip-path:polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);}
+.nuc-part.phosphate{background:rgba(155,123,240,0.16); border-color:var(--accent); color:var(--accent); border-radius:50px;}
+.nuc-info{
+  flex:1; min-width:240px; background:var(--panel3); border:1px solid var(--border);
+  border-radius:12px; padding:18px; font-size:0.86rem; color:#c4cae0; line-height:1.6; min-height:120px;
+}
+.nuc-info b{color:var(--text);}
+
+/* helix diagram */
+.helix-toggle{display:flex; gap:10px; margin-bottom:18px;}
+.helix-toggle button{
+  background:var(--panel3); border:1px solid var(--border); color:var(--muted);
+  padding:7px 14px; border-radius:8px; font-size:0.78rem; cursor:pointer; font-weight:600;
+}
+.helix-toggle button.on{background:var(--accent2); color:#fff; border-color:var(--accent2);}
+.strand{display:flex; align-items:center; gap:0; margin:6px 0; font-family:'JetBrains Mono',monospace;}
+.strand .end{font-size:0.7rem; color:var(--muted); width:34px; text-align:center; font-weight:700;}
+.bp{
+  width:38px; height:34px; display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:0.9rem; border-radius:6px; margin:2px; color:#0c101c; cursor:pointer;
+  transition:.15s;
+}
+.bp:hover{transform:translateY(-3px);}
+.bp.A{background:var(--A);} .bp.T{background:var(--T);} .bp.C{background:var(--C);} .bp.G{background:var(--G);}
+.strand-row{display:flex;}
+.antiparallel-note{
+  margin-top:16px; background:rgba(155,123,240,0.09); border:1px solid rgba(155,123,240,0.3);
+  border-radius:10px; padding:12px 16px; font-size:0.83rem; color:#c4cae0;
+}
+
+/* phosphodiester */
+.pde-flow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-family:'JetBrains Mono',monospace; font-size:0.8rem;}
+.pde-node{
+  background:var(--panel3); border:1px solid var(--border); border-radius:8px; padding:10px 14px;
+  cursor:pointer; font-weight:700;
+}
+.pde-node.p{color:var(--accent); border-color:var(--accent);}
+.pde-node.s{color:var(--G); border-color:var(--G);}
+.pde-arrow{color:var(--muted);}
+
+/* mutation lab */
+.mut-select{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
+.mut-select button{
+  background:var(--panel3); border:1px solid var(--border); color:var(--muted);
+  padding:8px 14px; border-radius:8px; font-size:0.78rem; font-weight:600; cursor:pointer;
+}
+.mut-select button.active{background:var(--C); border-color:var(--C); color:#141b2e;}
+.seq-box{
+  font-family:'JetBrains Mono',monospace; font-size:1.1rem; letter-spacing:4px;
+  background:var(--panel3); border:1px solid var(--border); border-radius:10px; padding:18px;
+  text-align:center; margin-bottom:12px;
+}
+.seq-box .hl{background:var(--C); color:#141b2e; padding:2px 4px; border-radius:4px;}
+.mut-desc{color:#c4cae0; font-size:0.85rem; text-align:center;}
+
+/* comparison table */
+table.cmp{width:100%; border-collapse:collapse; font-size:0.87rem;}
+table.cmp th{
+  text-align:left; padding:10px 14px; color:var(--muted); font-size:0.72rem;
+  text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border);
+}
+table.cmp td{padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer;}
+table.cmp tr:hover td{background:rgba(255,255,255,0.03);}
+.pill{display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700;}
+.pill.dna{background:rgba(95,168,242,0.18); color:var(--G);}
+.pill.rna{background:rgba(242,104,92,0.18); color:var(--C);}
+
+/* gene transfer tabs */
+.gt-tabs{display:flex; gap:8px; margin-bottom:16px;}
+.gt-tabs button{
+  flex:1; background:var(--panel3); border:1px solid var(--border); color:var(--muted);
+  padding:10px; border-radius:10px; font-weight:700; cursor:pointer; font-size:0.85rem;
+}
+.gt-tabs button.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+.gt-steps{display:flex; flex-direction:column; gap:8px;}
+.gt-step{
+  display:none; background:var(--panel3); border:1px solid var(--border); border-radius:10px;
+  padding:14px 16px; font-size:0.85rem; color:#c4cae0; line-height:1.55;
+}
+.gt-step.show{display:block; animation:fadein .3s ease;}
+.gt-progress{display:flex; gap:6px; margin:14px 0;}
+.gt-progress .db{width:100%; height:5px; border-radius:3px; background:var(--panel3);}
+.gt-progress .db.on{background:var(--accent);}
+.gt-nav{display:flex; gap:10px; margin-top:14px;}
+.gt-nav button{
+  background:var(--panel2); border:1px solid var(--border); color:var(--text);
+  padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; font-size:0.8rem;
+}
+
+/* ===== Mini map ===== */
+.mm-wrap{display:grid; grid-template-columns:290px 1fr; gap:18px;}
+@media (max-width:760px){.mm-wrap{grid-template-columns:1fr;}}
+.mm-list{
+  background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:8px;
+  display:flex; flex-direction:column; gap:2px; max-height:560px; overflow:auto;
+}
+.mm-list button{
+  text-align:left; background:transparent; border:none; color:var(--muted);
+  padding:11px 14px; border-radius:9px; font-size:0.85rem; font-weight:600; cursor:pointer;
+  display:flex; align-items:center; gap:10px;
+}
+.mm-list button .n{
+  font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--muted);
+  width:20px; flex-shrink:0;
+}
+.mm-list button:hover{background:rgba(255,255,255,0.04); color:var(--text);}
+.mm-list button.active{background:linear-gradient(90deg, rgba(155,123,240,0.18), transparent); color:#fff;}
+.mm-list button.active .n{color:var(--accent);}
+.mm-display{
+  background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:26px;
+  min-height:420px;
+}
+.mm-display h3{margin-top:0; font-size:1.25rem;}
+.mm-display .placeholder{color:var(--muted); font-size:0.9rem; text-align:center; margin-top:140px;}
+.mm-display .body-text{color:#c4cae0; font-size:0.9rem; line-height:1.7;}
+
+/* ===== Flash cards ===== */
+.fc-bar{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;}
+.fc-counter{color:var(--muted); font-size:0.82rem; font-family:'JetBrains Mono',monospace;}
+.fc-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px;}
+.flashcard{
+  perspective:1000px; height:170px; cursor:pointer;
+}
+.fc-inner{
+  position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d;
+}
+.flashcard.flipped .fc-inner{transform:rotateY(180deg);}
+.fc-face{
+  position:absolute; inset:0; border-radius:14px; padding:18px;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  backface-visibility:hidden; font-size:0.88rem; line-height:1.45; border:1px solid var(--border);
+}
+.fc-front{background:var(--panel2); color:var(--text); font-weight:700; font-family:'Fraunces',serif; font-size:1.02rem;}
+.fc-back{background:var(--panel3); color:#c4cae0; transform:rotateY(180deg);}
+.fc-face .fc-tag{
+  position:absolute; top:10px; left:12px; font-family:'JetBrains Mono',monospace; font-size:0.62rem;
+  color:var(--muted); letter-spacing:1px;
+}
+
+/* ===== Quiz ===== */
+.quiz-bar{
+  display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px;
+  background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px 18px;
+}
+.quiz-score{font-family:'JetBrains Mono',monospace; font-size:0.9rem;}
+.quiz-score b{color:var(--accent);}
+.btn{
+  background:var(--accent); color:#fff; border:none; padding:9px 18px; border-radius:9px;
+  font-weight:700; font-size:0.82rem; cursor:pointer;
+}
+.btn.ghost{background:transparent; border:1px solid var(--border); color:var(--text);}
+.q-card{
+  background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:20px 22px; margin-bottom:14px;
+}
+.q-num{font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--accent); letter-spacing:1px;}
+.q-text{font-size:0.96rem; margin:8px 0 14px; font-weight:600; line-height:1.5;}
+.q-opts{display:grid; gap:8px;}
+.q-opt{
+  border:1px solid var(--border); background:var(--panel3); padding:10px 14px; border-radius:9px;
+  cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:10px; transition:.15s;
+}
+.q-opt:hover{border-color:var(--accent);}
+.q-opt .letter{
+  width:22px; height:22px; border-radius:6px; background:rgba(255,255,255,0.06);
+  display:flex; align-items:center; justify-content:center; font-size:0.72rem; font-weight:700; flex-shrink:0;
+}
+.q-opt.correct{border-color:var(--good); background:rgba(75,214,140,0.12);}
+.q-opt.wrong{border-color:var(--bad); background:rgba(242,104,92,0.12);}
+.q-opt.disabled{pointer-events:none; opacity:0.85;}
+
+/* footer */
+footer{
+  text-align:center; padding:26px 20px 40px; color:var(--muted); font-size:0.75rem;
+  border-top:1px solid var(--border); margin-top:30px;
+}
+footer .credit{margin-top:4px; letter-spacing:0.5px;}
+footer .credit b{color:var(--text);}
+
+::-webkit-scrollbar{width:8px; height:8px;}
+::-webkit-scrollbar-thumb{background:var(--panel2); border-radius:4px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="helix-mark"><span></span><span></span><span></span><span></span></div>
+      <div class="brand-text">
+        <div class="name">Study Smart</div>
+        <div class="sub">Bacterial Genetics · Lec.8</div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabNav">
+      <button data-target="overview" class="active"><span class="dot" style="background:var(--A)"></span>Overview</button>
+      <button data-target="diagrams"><span class="dot" style="background:var(--G)"></span>Diagrams</button>
+      <button data-target="minimap"><span class="dot" style="background:var(--T)"></span>Mini Map</button>
+      <button data-target="flashcards"><span class="dot" style="background:var(--C)"></span>Flash Cards</button>
+      <button data-target="quiz"><span class="dot" style="background:var(--accent)"></span>Quiz Bank</button>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>Study <span class="accent">Smart</span></h1>
+  <p>A focused study space for Medical Microbiology — Genetics: nucleic acid structure, mutations, and horizontal gene transfer in bacteria.</p>
+  <div class="seq-strip" id="seqStrip"></div>
+</div>
+
+<main>
+
+  <!-- ================= OVERVIEW ================= -->
+  <section class="section active" id="overview">
+    <div class="section-head">
+      <div class="eyebrow">Key Rules</div>
+      <h2>The essentials, no filler</h2>
+      <p>The core definitions and rules you actually need to remember — not the full lecture.</p>
+    </div>
+    <div class="law-grid">
+      <div class="law-card a">
+        <span class="tag">Definition</span>
+        <h4>Genetics</h4>
+        <p>Study of genes, genetic variation, and heredity. The genome = total genetic information of an organism.</p>
+      </div>
+      <div class="law-card t">
+        <span class="tag">Central Dogma</span>
+        <h4>Gene Expression</h4>
+        <p>DNA → (transcription) → mRNA → (translation) → protein. The rule linking nucleotide and amino acid sequences is the genetic code.</p>
+      </div>
+      <div class="law-card c">
+        <span class="tag">Rule</span>
+        <h4>DNA vs RNA bases</h4>
+        <p>DNA: Adenine, Thymine, Cytosine, Guanine. RNA: Adenine, Uracil, Cytosine, Guanine — Uracil replaces Thymine.</p>
+      </div>
+      <div class="law-card g">
+        <span class="tag">Rule</span>
+        <h4>Base Pairing</h4>
+        <p>A pairs with T (or U in RNA); G pairs with C. This is complementary base pairing — the basis of heredity.</p>
+      </div>
+      <div class="law-card a">
+        <span class="tag">Rule</span>
+        <h4>Strand Polarity</h4>
+        <p>Each strand runs 5' (free phosphate) → 3' (free hydroxyl). The two DNA strands are antiparallel.</p>
+      </div>
+      <div class="law-card g">
+        <span class="tag">Structure</span>
+        <h4>Phosphodiester Linkage</h4>
+        <p>Phosphate bonds to sugar on both sides by ester linkages → together a phosphodiester linkage. The phosphate carries a negative charge.</p>
+      </div>
+      <div class="law-card c">
+        <span class="tag">Mutation</span>
+        <h4>Spontaneous vs Induced</h4>
+        <p>Spontaneous = occurs naturally. Induced = caused deliberately by a mutagen (chemical or UV radiation).</p>
+      </div>
+      <div class="law-card t">
+        <span class="tag">Mutation Types</span>
+        <h4>6 Sequence Alterations</h4>
+        <p>Substitution, Insertion, Deletion, Inversion, Duplication, Translocation.</p>
+      </div>
+      <div class="law-card a">
+        <span class="tag">Definition</span>
+        <h4>Point / Null Mutation</h4>
+        <p>Point mutation = single base change. Null mutation = completely inactivates the gene.</p>
+      </div>
+      <div class="law-card g">
+        <span class="tag">Rule</span>
+        <h4>Horizontal Gene Transfer</h4>
+        <p>Three mechanisms: Transformation, Transduction, Conjugation. Conjugation is the most common, especially between different species.</p>
+      </div>
+      <div class="law-card c">
+        <span class="tag">Mechanism</span>
+        <h4>Transformation</h4>
+        <p>DNA fragment from a dead, degraded bacterium enters a living recipient; RecA protein drives recombination.</p>
+      </div>
+      <div class="law-card t">
+        <span class="tag">Mechanism</span>
+        <h4>Transduction & Conjugation</h4>
+        <p>Transduction = bacteriophage-mediated DNA transfer (generalized or specialized). Conjugation = direct cell-to-cell transfer via a pilus, usually of a plasmid or transposon.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DIAGRAMS ================= -->
+  <section class="section" id="diagrams">
+    <div class="section-head">
+      <div class="eyebrow">Explore</div>
+      <h2>Click through the structures</h2>
+      <p>Every figure from the lecture, rebuilt so you can click, toggle, and step through it.</p>
+    </div>
+
+    <div class="diagram-nav" id="diagNav">
+      <button class="active" data-d="d1">Nucleotide</button>
+      <button data-d="d2">Double Helix</button>
+      <button data-d="d3">Phosphodiester Bond</button>
+      <button data-d="d4">Mutation Lab</button>
+      <button data-d="d5">DNA vs RNA</button>
+      <button data-d="d6">Gene Transfer</button>
+    </div>
+
+    <!-- D1 Nucleotide -->
+    <div class="diagram-panel active" id="d1">
+      <div class="nuc-wrap">
+        <div class="nuc-visual">
+          <div class="nuc-part base" data-info="base">Nitrogen Base</div>
+          <div class="nuc-part sugar" data-info="sugar">5-Carbon Sugar</div>
+          <div class="nuc-part phosphate" data-info="phosphate">Phosphate Group</div>
+        </div>
+        <div class="nuc-info" id="nucInfo">
+          <b>Click a piece of the nucleotide</b><br><br>
+          Every nucleotide has exactly three components. The sugar and phosphate alternate to form the backbone of the strand; the base sticks out to carry the genetic information.
+        </div>
+      </div>
+    </div>
+
+    <!-- D2 Double helix -->
+    <div class="diagram-panel" id="d2">
+      <div class="helix-toggle">
+        <button class="on" id="hxLabels">Show base letters</button>
+        <button id="hxEnds">Show 5'/3' ends</button>
+      </div>
+      <div class="strand-row">
+        <div class="end">5'</div>
+        <div class="bp G" data-pair="G-C">G</div><div class="bp C" data-pair="C-G">C</div>
+        <div class="bp T" data-pair="T-A">T</div><div class="bp A" data-pair="A-T">A</div>
+        <div class="bp A" data-pair="A-T">A</div><div class="bp T" data-pair="T-A">T</div>
+        <div class="bp C" data-pair="C-G">C</div><div class="bp G" data-pair="G-C">G</div>
+        <div class="end">3'</div>
+      </div>
+      <div class="strand-row">
+        <div class="end">3'</div>
+        <div class="bp C" data-pair="G-C">C</div><div class="bp G" data-pair="C-G">G</div>
+        <div class="bp A" data-pair="T-A">A</div><div class="bp T" data-pair="A-T">T</div>
+        <div class="bp T" data-pair="A-T">T</div><div class="bp A" data-pair="T-A">A</div>
+        <div class="bp G" data-pair="C-G">G</div><div class="bp C" data-pair="G-C">C</div>
+        <div class="end">5'</div>
+      </div>
+      <div class="antiparallel-note" id="hxNote">Click any base pair to see its complementary rule. Notice the top strand reads 5'→3' left to right, while the bottom strand reads 5'→3' right to left — the two strands are <b>antiparallel</b>.</div>
+    </div>
+
+    <!-- D3 phosphodiester -->
+    <div class="diagram-panel" id="d3">
+      <div class="pde-flow">
+        <div class="pde-node s" data-t="Sugar (3' carbon) of nucleotide 1 carries a free hydroxyl (–OH) group.">Sugar 3'</div>
+        <span class="pde-arrow">— ester linkage →</span>
+        <div class="pde-node p" data-t="The phosphate group bridges two sugars. It is bonded by an ester linkage on each side — together these two ester bonds form one phosphodiester linkage. The phosphate carries a negative charge.">Phosphate</div>
+        <span class="pde-arrow">← ester linkage —</span>
+        <div class="pde-node s" data-t="Sugar (5' carbon) of nucleotide 2 is joined to the phosphate, continuing the backbone.">Sugar 5'</div>
+      </div>
+      <div class="nuc-info" id="pdeInfo" style="margin-top:16px;">Click any node above to read what it does.</div>
+    </div>
+
+    <!-- D4 mutation lab -->
+    <div class="diagram-panel" id="d4">
+      <div class="mut-select" id="mutSelect">
+        <button class="active" data-m="sub">Substitution</button>
+        <button data-m="ins">Insertion</button>
+        <button data-m="del">Deletion</button>
+        <button data-m="inv">Inversion</button>
+        <button data-m="dup">Duplication</button>
+        <button data-m="tra">Translocation</button>
+      </div>
+      <div class="seq-box" id="mutSeq">A T G <span class="hl">C</span> A T G C</div>
+      <div class="mut-desc" id="mutDesc">Base substitution: one base is replaced by another base.</div>
+    </div>
+
+    <!-- D5 comparison -->
+    <div class="diagram-panel" id="d5">
+      <table class="cmp">
+        <tr><th>Feature</th><th><span class="pill dna">DNA</span></th><th><span class="pill rna">RNA</span></th></tr>
+        <tr data-t="Sugar in DNA's backbone is deoxyribose (a 5-carbon sugar)."><td>Backbone sugar</td><td>Deoxyribose</td><td>Ribose</td></tr>
+        <tr data-t="DNA uses Thymine; RNA replaces it with Uracil."><td>Unique base</td><td>Thymine</td><td>Uracil</td></tr>
+        <tr data-t="Adenine, Cytosine and Guanine are used by both DNA and RNA."><td>Shared bases</td><td>A, C, G</td><td>A, C, G</td></tr>
+        <tr data-t="DNA carries the stored genome; mRNA is the working copy used for translation."><td>Main role</td><td>Store genetic info</td><td>Carry / express info</td></tr>
+      </table>
+      <div class="nuc-info" id="cmpInfo" style="margin-top:14px;">Click a row to read more.</div>
+    </div>
+
+    <!-- D6 gene transfer -->
+    <div class="diagram-panel" id="d6">
+      <div class="gt-tabs" id="gtTabs">
+        <button class="active" data-g="tf">Transformation</button>
+        <button data-g="td">Transduction</button>
+        <button data-g="cj">Conjugation</button>
+      </div>
+      <div class="gt-progress" id="gtProgress"></div>
+      <div class="gt-steps" id="gtSteps"></div>
+      <div class="gt-nav">
+        <button class="btn ghost" id="gtPrev">← Previous step</button>
+        <button class="btn" id="gtNext">Next step →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MINI MAP ================= -->
+  <section class="section" id="minimap">
+    <div class="section-head">
+      <div class="eyebrow">Navigate</div>
+      <h2>Pick a topic, read it here</h2>
+      <p>Click any title on the left — its text appears in the panel on the right.</p>
+    </div>
+    <div class="mm-wrap">
+      <div class="mm-list" id="mmList"></div>
+      <div class="mm-display" id="mmDisplay">
+        <div class="placeholder">Select a topic from the list to read it here.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FLASHCARDS ================= -->
+  <section class="section" id="flashcards">
+    <div class="section-head">
+      <div class="eyebrow">Recall</div>
+      <h2>Flip to test yourself</h2>
+      <p>Click a card to reveal the answer. Click again to flip it back.</p>
+    </div>
+    <div class="fc-bar">
+      <div class="fc-counter" id="fcCounter">0 cards flipped</div>
+      <button class="btn ghost" id="fcReset">Reset all cards</button>
+    </div>
+    <div class="fc-grid" id="fcGrid"></div>
+  </section>
+
+  <!-- ================= QUIZ ================= -->
+  <section class="section" id="quiz">
+    <div class="section-head">
+      <div class="eyebrow">Test Yourself</div>
+      <h2>Quiz Bank</h2>
+      <p>Answer options are shuffled every time the quiz loads.</p>
+    </div>
+    <div class="quiz-bar">
+      <div class="quiz-score">Score: <b id="qsScore">0</b> / <span id="qsTotal">0</span> answered</div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn ghost" id="qReshuffle">Reshuffle & Restart</button>
+      </div>
+    </div>
+    <div id="quizList"></div>
+  </section>
+
+</main>
+
+<footer>
+  <div>Study Smart — Bacterial Genetics, Lecture 8</div>
+  <div class="credit">© All rights reserved — <b>Anmar Taha</b></div>
+</footer>
+
+<script>
+/* ---------- Tab navigation ---------- */
+const tabBtns = document.querySelectorAll('#tabNav button');
+const sections = document.querySelectorAll('.section');
+tabBtns.forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    tabBtns.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    sections.forEach(s=>s.classList.remove('active'));
+    document.getElementById(btn.dataset.target).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+/* ---------- Hero sequence strip ---------- */
+const seqStrip = document.getElementById('seqStrip');
+"ATCGGCTAATCGGCATCGTA".split('').forEach(ch=>{
+  const s=document.createElement('span'); s.textContent=ch; seqStrip.appendChild(s);
+});
+
+/* ---------- Diagram nav ---------- */
+const diagNavBtns = document.querySelectorAll('#diagNav button');
+diagNavBtns.forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    diagNavBtns.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.diagram-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById(btn.dataset.d).classList.add('active');
+  });
+});
+
+/* D1 nucleotide */
+const nucInfoText = {
+  base: "<b>Nitrogen-containing Base</b><br>Carries the genetic information. DNA uses Adenine, Thymine, Cytosine, Guanine. RNA uses Adenine, Uracil, Cytosine, Guanine.",
+  sugar: "<b>5-Carbon Sugar (Pentose)</b><br>Deoxyribose in DNA, ribose in RNA. The sugar's 3' and 5' carbons link to phosphate groups to build the backbone.",
+  phosphate: "<b>Phosphate Group</b><br>Joins the sugar of one nucleotide to the sugar of the next by ester linkages on both sides — together forming a phosphodiester linkage. It carries a negative charge."
+};
+document.querySelectorAll('.nuc-part').forEach(p=>{
+  p.addEventListener('click',()=>{
+    document.getElementById('nucInfo').innerHTML = nucInfoText[p.dataset.info];
+  });
+});
+
+/* D2 helix */
+document.getElementById('hxLabels').addEventListener('click',function(){
+  this.classList.toggle('on');
+  document.querySelectorAll('.bp').forEach(b=>{
+    b.style.visibility = this.classList.contains('on') ? 'visible' : 'hidden';
+  });
+});
+document.getElementById('hxEnds').addEventListener('click',function(){
+  this.classList.toggle('on');
+  document.querySelectorAll('.end').forEach(e=>{
+    e.style.opacity = this.classList.contains('on') ? '1' : '0.25';
+  });
+});
+document.querySelectorAll('.bp').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.getElementById('hxNote').innerHTML = "<b>"+b.dataset.pair+"</b> — complementary base pairing means if one strand shows "+b.dataset.pair.split('-')[0]+", the partner strand must show "+b.dataset.pair.split('-')[1]+" at that position. This lets either strand's sequence be deduced from the other.";
+  });
+});
+
+/* D3 phosphodiester */
+document.querySelectorAll('.pde-node').forEach(n=>{
+  n.addEventListener('click',()=>{
+    document.getElementById('pdeInfo').textContent = n.dataset.t;
+  });
+});
+
+/* D4 mutation lab */
+const mutData = {
+  sub:{seq:['A','T','G','<span class="hl">C</span>','A','T','G','C'], desc:"Base substitution: one base is replaced by another base."},
+  ins:{seq:['A','T','G','<span class="hl">C C</span>','A','T','G','C'], desc:"Insertion: one or more bases are inserted into the DNA sequence."},
+  del:{seq:['A','T','G','<span class="hl">·</span>','A','T','G','C'], desc:"Deletion: one or more bases are deleted from the DNA sequence."},
+  inv:{seq:['A','T','<span class="hl">G C</span>','A','T','G','C'], desc:"Inversion: a segment of DNA is inverted, but stays at the same overall location."},
+  dup:{seq:['A','T','G','C','<span class="hl">A T G C</span>'], desc:"Duplication: a segment of DNA is duplicated; the copy usually stays at the same location as the original."},
+  tra:{seq:['A','T','<span class="hl">G C</span>','...','A','T','G','C'], desc:"Translocation: a segment of DNA moves to another position — on the same molecule or a different one."}
+};
+document.querySelectorAll('#mutSelect button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#mutSelect button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const d = mutData[btn.dataset.m];
+    document.getElementById('mutSeq').innerHTML = d.seq.join(' ');
+    document.getElementById('mutDesc').textContent = d.desc;
+  });
+});
+
+/* D5 comparison table */
+document.querySelectorAll('table.cmp tr[data-t]').forEach(tr=>{
+  tr.addEventListener('click',()=>{
+    document.getElementById('cmpInfo').textContent = tr.dataset.t;
+  });
+});
+
+/* D6 gene transfer */
+const gtData = {
+  tf:[
+    "Step 1 — A donor bacterium dies and is degraded, releasing DNA fragments (typically around 10 genes long).",
+    "Step 2 — A nuclease degrades one strand of the donor fragment; the remaining single strand enters the living, competent recipient bacterium.",
+    "Step 3 — RecA proteins promote genetic exchange between the donor fragment and the recipient's DNA, involving breakage and re-binding of paired DNA segments.",
+    "Step 4 — Transformation is complete: the recipient chromosome now carries a segment of donor DNA."
+  ],
+  td:[
+    "Step 1 — A bacteriophage injects its DNA into a host bacterial cell.",
+    "Step 2 — A phage enzyme breaks down the host bacterial DNA.",
+    "Step 3–4 — The cell assembles new phages; some defective phages mistakenly package host bacterial DNA along with (or instead of) phage DNA.",
+    "Step 5–6 — This transducing phage infects a new recipient cell and inserts the donor (bacterial) DNA it carries.",
+    "Step 7 — Recombination includes the donor DNA into the recipient's chromosome — the bacterium is now transduced. Generalized transduction picks up any part of the genome; specialized transduction picks up only specific portions."
+  ],
+  cj:[
+    "Step 1 — The donor cell carries a mobile plasmid and forms a pilus toward the recipient cell.",
+    "Step 2 — The pilus draws the donor and recipient into direct contact, forming a bridge-like connection.",
+    "Step 3 — The plasmid is processed by a relaxosome and transferosome and passed through the bridge into the recipient.",
+    "Step 4 — Both cells now act as donors, each carrying a copy of the plasmid. Transferred genes often carry benefits such as antibiotic resistance."
+  ]
+};
+let gtCurrent='tf', gtIndex=0;
+function renderGT(){
+  const steps = gtData[gtCurrent];
+  const stepsWrap = document.getElementById('gtSteps');
+  stepsWrap.innerHTML = steps.map((s,i)=>`<div class="gt-step ${i===gtIndex?'show':''}">${s}</div>`).join('');
+  const prog = document.getElementById('gtProgress');
+  prog.innerHTML = steps.map((_,i)=>`<div class="db ${i<=gtIndex?'on':''}"></div>`).join('');
+}
+document.querySelectorAll('#gtTabs button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#gtTabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    gtCurrent = btn.dataset.g; gtIndex=0; renderGT();
+  });
+});
+document.getElementById('gtNext').addEventListener('click',()=>{
+  if(gtIndex < gtData[gtCurrent].length-1){ gtIndex++; renderGT(); }
+});
+document.getElementById('gtPrev').addEventListener('click',()=>{
+  if(gtIndex>0){ gtIndex--; renderGT(); }
+});
+renderGT();
+
+/* ---------- Mini map ---------- */
+const mmTopics = [
+  {t:"Genetics — General Concepts", b:"Genetics is the branch of biology concerned with genes, genetic variation, and heredity. Genetic information in bacteria and many viruses is encoded in DNA (some viruses use RNA). The units of genetic information are genes; the total genetic information of an organism is its genome. Replication of the genome is essential for inheritance. Gene expression usually involves transcription of DNA into mRNA, then translation of mRNA into protein — the rule linking nucleotide sequence to amino acid sequence is the genetic code."},
+  {t:"Chemical Structure of Nucleic Acids", b:"DNA and RNA are linear polymers made of subunits called nucleotides. The information in a gene is determined by the order of its nucleotides — just as the meaning of a sentence comes from the order of its letters. Each nucleic acid uses four different nucleotides (named for their base), and their order determines the genetic information."},
+  {t:"Nucleotide Components", b:"Each nucleotide has three parts: a phosphate group, a five-carbon sugar, and a nitrogen-containing base. The phosphate groups and sugars form the backbone of each DNA or RNA strand."},
+  {t:"DNA vs RNA Bases", b:"DNA uses adenine, thymine, cytosine and guanine. RNA uses adenine, uracil, cytosine and guanine — uracil replaces thymine."},
+  {t:"Phosphodiester Linkage", b:"The phosphate group is joined to the sugar on either side by ester linkages; the overall structure is therefore called a phosphodiester linkage. The phosphate group linking the sugars carries a negative charge."},
+  {t:"Double Stranded DNA & Polarity", b:"Nucleotides are linked by joining the 5' phosphate of one to the 3' hydroxyl of the next. A strand typically has a free phosphate at its 5' end and a free hydroxyl at its 3' end, giving it polarity — it matters which direction the bases are read. The 5' end is considered the beginning of a strand because genetic information is read, and new strands are synthesized, starting at the 5' end. The two strands of a DNA molecule are antiparallel: the 5' end of one strand sits opposite the 3' end of the other."},
+  {t:"Complementary Base Pairing", b:"If one base in a base pair is known, the other can be deduced: A pairs with T, and G pairs with C. This is complementary base pairing. Because of it, the sequence of either strand can be deduced from the other — these are complementary sequences. This property is what allows genetic information to be inherited: in cell division, each daughter cell receives a copy of the parental genome."},
+  {t:"Spontaneous vs Induced Mutations", b:"Most mutations occur spontaneously (spontaneous mutations), though these represent only a small fraction of all possible mutations. Scientists also create induced mutations by treating an organism with a mutagenic agent. At the molecular level, mutations are alterations in a gene's DNA sequence; when the DNA replicates, the altered sequence is duplicated and passed to the next generation of cells. Since DNA is the template for transcription, a DNA mutation is passed to the mRNA, and may be translated into an altered, possibly defective, protein."},
+  {t:"Major Types of Mutation", b:"A mutation involving only a single base is a point mutation. A null mutation totally inactivates a gene. The major types of sequence alteration are: Base substitution (one base replaced by another), Insertion (one or more bases added), Deletion (one or more bases removed), Inversion (a segment is flipped but stays in place), Duplication (a segment is copied, the copy usually staying nearby), and Translocation (a segment moves to another position, on the same or a different DNA molecule)."},
+  {t:"Mutagenic Processes & DNA Polymerase", b:"Errors during DNA replication (mutations) can affect phenotype, especially within a gene's coding sequence. Error rates are normally very low thanks to the proofreading ability of DNA polymerases. Processes that raise the mutation rate are called mutagenic: mutagenic chemicals interfere with base-pairing during replication, while UV radiation damages DNA structure directly. Bacteria adapt to new environments by acquiring new genetic traits through mutation."},
+  {t:"Horizontal Gene Transfer — Overview", b:"There are three mechanisms of horizontal gene transfer in bacteria: transformation, transduction, and conjugation. Conjugation is the most common mechanism, especially for transfer from a donor species to a different recipient species."},
+  {t:"Transformation", b:"Transformation is a form of genetic recombination where a DNA fragment from a dead, degraded bacterium enters a recipient bacterium. Step 1: a donor bacterium dies and is degraded, releasing DNA fragments (~10 genes long). Step 2: a nuclease degrades one strand of the fragment; the remaining strand enters the recipient. Step 3: RecA proteins promote exchange between the donor fragment and recipient DNA, via breakage and rebinding of paired segments. Step 4: transformation is complete."},
+  {t:"Transduction", b:"Transduction is the process by which a virus transfers genetic material from one bacterium to another. Bacteriophages infect bacterial cells and use them as hosts to make more viruses; during assembly, they sometimes package a portion of the host's bacterial DNA instead of or with phage DNA. When such a phage infects a new host, this bacterial DNA may become part of the new host's genome. In generalized transduction, the phage can pick up any portion of the host's genome; in specialized transduction, it picks up only specific portions. Scientists exploit transduction to insert genes into host cells using viruses."},
+  {t:"Conjugation", b:"Bacterial conjugation is the transfer of genetic material between bacterial cells by direct cell-to-cell contact or a bridge-like connection formed by a pilus. In classical E. coli conjugation, the donor cell transfers a conjugative or mobilizable genetic element — most often a plasmid or transposon. Most conjugative plasmids ensure the recipient doesn't already carry a similar element. The transferred information is often beneficial — antibiotic resistance, xenobiotic tolerance, or the ability to use new metabolites — though some elements can be harmful, acting as bacterial parasites. Note: this exchange of genetic material happens before asexual reproduction in bacteria."}
+];
+const mmList = document.getElementById('mmList');
+mmTopics.forEach((topic,i)=>{
+  const b = document.createElement('button');
+  b.innerHTML = `<span class="n">${String(i+1).padStart(2,'0')}</span>${topic.t}`;
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#mmList button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('mmDisplay').innerHTML = `<h3>${topic.t}</h3><div class="body-text">${topic.b}</div>`;
+  });
+  mmList.appendChild(b);
+});
+
+/* ---------- Flash cards ---------- */
+const flashcards = [
+  ["Genome","The total genetic information possessed by an organism."],
+  ["Genetic code","The rule relating nucleotide sequence in mRNA to amino acid sequence in protein."],
+  ["Gene expression order","Transcription (DNA → mRNA) then translation (mRNA → protein)."],
+  ["Nucleotide components","Phosphate group + five-carbon sugar + nitrogen-containing base."],
+  ["DNA bases","Adenine, Thymine, Cytosine, Guanine."],
+  ["RNA bases","Adenine, Uracil, Cytosine, Guanine."],
+  ["Phosphodiester linkage","The bond formed when a phosphate group links two sugars by ester linkages on each side; it carries a negative charge."],
+  ["5' end","The beginning of a DNA/RNA strand — carries a free phosphate group; reading and synthesis start here."],
+  ["3' end","The end of a strand — carries a free hydroxyl group."],
+  ["Antiparallel strands","The two DNA strands run in opposite directions: the 5' end of one faces the 3' end of the other."],
+  ["Complementary base pairing","A pairs with T (or U); G pairs with C — lets one strand's sequence be deduced from the other."],
+  ["Spontaneous mutation","A mutation that occurs naturally, without deliberate treatment."],
+  ["Induced mutation","A mutation created deliberately by treating an organism with a mutagenic agent."],
+  ["Point mutation","A mutation involving only a single base."],
+  ["Null mutation","A mutation that totally inactivates a gene."],
+  ["Base substitution","One base is replaced by another base."],
+  ["Insertion (mutation)","One or more bases are inserted into the DNA sequence."],
+  ["Deletion (mutation)","One or more bases are removed from the DNA sequence."],
+  ["Inversion (mutation)","A DNA segment is flipped but stays at the same overall location."],
+  ["Duplication (mutation)","A DNA segment is copied; the copy usually stays near the original."],
+  ["Translocation (mutation)","A DNA segment moves to a new position, on the same or a different DNA molecule."],
+  ["DNA polymerase proofreading","Keeps replication error rates very low by correcting mismatched bases."],
+  ["Mutagenic agents","Chemicals that interfere with base-pairing, or UV radiation that damages DNA directly."],
+  ["Three HGT mechanisms","Transformation, Transduction, Conjugation."],
+  ["Most common HGT mechanism","Conjugation — especially between donor and recipient of different species."],
+  ["Transformation source DNA","A DNA fragment released from a dead, degraded donor bacterium."],
+  ["RecA protein role","Promotes genetic exchange (breakage and rebinding) between donor and recipient DNA during transformation."],
+  ["Transduction","Transfer of bacterial DNA from one cell to another by a bacteriophage."],
+  ["Generalized vs specialized transduction","Generalized: phage picks up any part of the genome. Specialized: phage picks up only specific portions."],
+  ["Conjugation mechanism","Direct cell-to-cell contact via a pilus, transferring a plasmid or transposon."],
+  ["Conjugation benefits","Can transfer antibiotic resistance, xenobiotic tolerance, or new metabolic abilities."]
+];
+const fcGrid = document.getElementById('fcGrid');
+let flippedCount = 0;
+flashcards.forEach(([term,def])=>{
+  const card = document.createElement('div');
+  card.className='flashcard';
+  card.innerHTML = `<div class="fc-inner">
+      <div class="fc-face fc-front">${term}</div>
+      <div class="fc-face fc-back">${def}</div>
+    </div>`;
+  card.addEventListener('click',()=>{
+    const wasFlipped = card.classList.contains('flipped');
+    card.classList.toggle('flipped');
+    flippedCount += wasFlipped ? -1 : 1;
+    document.getElementById('fcCounter').textContent = flippedCount+" card"+(flippedCount===1?'':'s')+" flipped";
+  });
+  fcGrid.appendChild(card);
+});
+document.getElementById('fcReset').addEventListener('click',()=>{
+  document.querySelectorAll('.flashcard').forEach(c=>c.classList.remove('flipped'));
+  flippedCount = 0;
+  document.getElementById('fcCounter').textContent = "0 cards flipped";
+});
+
+/* ---------- Quiz Bank ---------- */
+const quizBank = [
+  {q:"Genetics is defined as the branch of biology concerned with:", a:["Genes, genetic variation, and heredity","Cell membrane transport only","Bacterial staining techniques","Antibiotic pharmacology"], c:0},
+  {q:"The total genetic information possessed by an organism is called its:", a:["Phenotype","Genome","Proteome","Karyotype"], c:1},
+  {q:"Gene expression proceeds in which order?", a:["Translation then transcription","Transcription then translation","Replication then translation only","Translation only"], c:1},
+  {q:"The rule relating nucleotide sequence to amino acid sequence is called the:", a:["Genetic code","Reading frame law","Central axiom","Codon rule"], c:0},
+  {q:"How many components does each nucleotide have?", a:["Two","Three","Four","Five"], c:1},
+  {q:"The three components of a nucleotide are:", a:["Phosphate, sugar, base","Sugar, protein, lipid","Base, ribosome, enzyme","Phosphate, amino acid, sugar"], c:0},
+  {q:"Which base does DNA use that RNA does NOT?", a:["Adenine","Guanine","Cytosine","Thymine"], c:3},
+  {q:"Which base does RNA use in place of thymine?", a:["Uracil","Inosine","Xanthine","Cytosine"], c:0},
+  {q:"Which bases are used by BOTH DNA and RNA?", a:["Thymine and Uracil","Adenine, Cytosine, Guanine","Only Adenine","Only Guanine"], c:1},
+  {q:"The sugar-phosphate backbone of a nucleic acid strand is formed by:", a:["Bases stacking together","Hydrogen bonds between strands","Phosphate groups and sugars","Amino acid chains"], c:2},
+  {q:"The bond linking two nucleotide sugars through a phosphate group is called a:", a:["Peptide bond","Phosphodiester linkage","Glycosidic bond","Hydrogen bond"], c:1},
+  {q:"The phosphate group linking two sugars carries what charge?", a:["Positive","Neutral","Negative","Variable"], c:2},
+  {q:"The 5' end of a DNA strand is characterized by a free:", a:["Hydroxyl group","Phosphate group","Amino group","Carboxyl group"], c:1},
+  {q:"The 3' end of a DNA strand is characterized by a free:", a:["Phosphate group","Hydroxyl group","Methyl group","Sulfate group"], c:1},
+  {q:"Why is the 5' end considered the beginning of a DNA/RNA strand?", a:["It is physically longer","Genetic information is read and synthesis starts there","It has more hydrogen bonds","It contains the start codon only"], c:1},
+  {q:"The two strands of a DNA double helix are described as:", a:["Parallel","Antiparallel","Perpendicular","Randomly oriented"], c:1},
+  {q:"If one DNA strand has an A at a given position, the complementary strand will have:", a:["G","C","T","A"], c:2},
+  {q:"If one DNA strand has a G at a given position, the complementary strand will have:", a:["C","T","A","G"], c:0},
+  {q:"Complementary base pairing is significant because it:", a:["Prevents mutations entirely","Allows the sequence of one strand to be deduced from the other","Only applies to RNA","Determines cell shape"], c:1},
+  {q:"In cell division, complementary base pairing ensures that:", a:["Only one daughter cell gets DNA","Each daughter cell receives a copy of the parental genome","Mutations are eliminated","Proteins are inherited directly"], c:1},
+  {q:"A mutation that occurs naturally, without deliberate treatment, is called:", a:["An induced mutation","A spontaneous mutation","A null mutation","A silent mutation"], c:1},
+  {q:"A mutation deliberately created by treating an organism with a mutagenic agent is called:", a:["A spontaneous mutation","An induced mutation","A point mutation","A frameshift mutation"], c:1},
+  {q:"A mutation involving only a single base is called a:", a:["Null mutation","Point mutation","Frameshift mutation","Silent mutation"], c:1},
+  {q:"A mutation that totally inactivates a gene is termed a:", a:["Null mutation","Point mutation","Missense mutation","Silent mutation"], c:0},
+  {q:"Replacing one base with another base in a DNA sequence is called:", a:["Insertion","Deletion","Base substitution","Duplication"], c:2},
+  {q:"Adding one or more bases into a DNA sequence is called:", a:["Insertion","Inversion","Deletion","Translocation"], c:0},
+  {q:"Removing one or more bases from a DNA sequence is called:", a:["Duplication","Deletion","Inversion","Substitution"], c:1},
+  {q:"A DNA segment that is flipped but stays at the same overall location describes:", a:["Duplication","Translocation","Inversion","Deletion"], c:2},
+  {q:"A DNA segment that is copied, with the copy usually staying near the original, describes:", a:["Duplication","Inversion","Substitution","Insertion"], c:0},
+  {q:"A DNA segment moving to a new position on the same or a different DNA molecule describes:", a:["Inversion","Duplication","Translocation","Deletion"], c:2},
+  {q:"Low error rates during DNA replication are mainly due to:", a:["Slow replication speed","The proofreading ability of DNA polymerase","High cellular temperature","Absence of mutagens"], c:1},
+  {q:"UV radiation causes mutations primarily by:", a:["Interfering with base-pairing chemically","Directly damaging DNA structure","Adding extra phosphate groups","Removing the sugar backbone"], c:1},
+  {q:"How many mechanisms of horizontal gene transfer exist in bacteria?", a:["Two","Three","Four","Five"], c:1},
+  {q:"The three mechanisms of horizontal gene transfer in bacteria are:", a:["Mitosis, meiosis, fusion","Transformation, transduction, conjugation","Replication, translation, transcription","Diffusion, osmosis, endocytosis"], c:1},
+  {q:"Which mechanism is the most common for horizontal gene transfer, especially between different bacterial species?", a:["Transformation","Transduction","Conjugation","Mutation"], c:2},
+  {q:"In transformation, the DNA that enters the recipient bacterium originates from:", a:["A living bacteriophage","A dead, degraded donor bacterium","The recipient's own genome","A mitochondrion"], c:1},
+  {q:"During transformation, which protein promotes genetic exchange between donor and recipient DNA?", a:["RecA protein","DNA polymerase III","RNA polymerase","Ligase A"], c:0},
+  {q:"Transduction is the transfer of bacterial genetic material by way of a:", a:["Plasmid","Bacteriophage (virus)","Pilus","Nucleoid"], c:1},
+  {q:"In generalized transduction, the bacteriophage:", a:["Can pick up any portion of the host genome","Can only pick up specific portions of the genome","Cannot carry host DNA at all","Only transfers plasmids"], c:0},
+  {q:"In specialized transduction, the bacteriophage:", a:["Picks up any random DNA fragment","Picks up only specific portions of the host's DNA","Never infects a new host","Transfers RNA only"], c:1},
+  {q:"Bacterial conjugation transfers genetic material via:", a:["Airborne transmission","Direct cell-to-cell contact through a pilus","Spontaneous mutation","Viral infection"], c:1},
+  {q:"The genetic element most often transferred during conjugation is a:", a:["Ribosome","Plasmid or transposon","Mitochondrion","Cell wall fragment"], c:1},
+  {q:"A benefit that conjugation-transferred genes often provide to the recipient includes:", a:["Antibiotic resistance","Loss of a cell wall","Permanent sterility","Reduced replication rate"], c:0},
+  {q:"According to the lecture, in bacteria the exchange of genetic material (a form of \"sexual\" reproduction) occurs:", a:["After asexual reproduction","Before asexual reproduction","Only during sporulation","Never in bacteria"], c:1}
+];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+let answeredCount = 0, correctCount = 0;
+const quizListEl = document.getElementById('quizList');
+
+function buildQuiz(){
+  quizListEl.innerHTML = '';
+  answeredCount = 0; correctCount = 0;
+  document.getElementById('qsScore').textContent = '0';
+  document.getElementById('qsTotal').textContent = quizBank.length;
+
+  quizBank.forEach((item,idx)=>{
+    const opts = item.a.map((text,i)=>({text, correct: i===item.c}));
+    const shuffled = shuffle(opts);
+
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.innerHTML = `
+      <div class="q-num">Question ${idx+1} of ${quizBank.length}</div>
+      <div class="q-text">${item.q}</div>
+      <div class="q-opts"></div>
+    `;
+    const optsWrap = card.querySelector('.q-opts');
+    const letters = ['A','B','C','D'];
+    shuffled.forEach((opt,i)=>{
+      const optEl = document.createElement('div');
+      optEl.className = 'q-opt';
+      optEl.innerHTML = `<span class="letter">${letters[i]}</span><span>${opt.text}</span>`;
+      optEl.addEventListener('click',()=>{
+        const alreadyAnswered = optsWrap.classList.contains('answered');
+        if(alreadyAnswered) return;
+        optsWrap.classList.add('answered');
+        optsWrap.querySelectorAll('.q-opt').forEach(o=>o.classList.add('disabled'));
+        if(opt.correct){
+          optEl.classList.add('correct');
+          correctCount++;
+        } else {
+          optEl.classList.add('wrong');
+          const correctEl = [...optsWrap.children].find((el,ei)=>shuffled[ei].correct);
+          if(correctEl) correctEl.classList.add('correct');
+        }
+        answeredCount++;
+        document.getElementById('qsScore').textContent = correctCount;
+        document.getElementById('qsTotal').textContent = quizBank.length + " (" + answeredCount + " answered)";
+      });
+      optsWrap.appendChild(optEl);
+    });
+    quizListEl.appendChild(card);
+  });
+}
+document.getElementById('qReshuffle').addEventListener('click', buildQuiz);
+buildQuiz();
+</script>
+</body>
+</html>
