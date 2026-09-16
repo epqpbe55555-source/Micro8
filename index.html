@@ -234,6 +234,7 @@ table.cmp tr:hover td{background:rgba(255,255,255,0.03);}
   padding:10px; border-radius:10px; font-weight:700; cursor:pointer; font-size:0.85rem;
 }
 .gt-tabs button.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+.level-tabs{margin-bottom:18px;}
 .gt-steps{display:flex; flex-direction:column; gap:8px;}
 .gt-step{
   display:none; background:var(--panel3); border:1px solid var(--border); border-radius:10px;
@@ -283,6 +284,7 @@ table.cmp tr:hover td{background:rgba(255,255,255,0.03);}
 .flashcard{
   perspective:1000px; height:170px; cursor:pointer;
 }
+.flashcard.fc-tall{height:230px;}
 .fc-inner{
   position:relative; width:100%; height:100%; transition:transform .5s; transform-style:preserve-3d;
 }
@@ -293,7 +295,7 @@ table.cmp tr:hover td{background:rgba(255,255,255,0.03);}
   backface-visibility:hidden; font-size:0.88rem; line-height:1.45; border:1px solid var(--border);
 }
 .fc-front{background:var(--panel2); color:var(--text); font-weight:700; font-family:'Fraunces',serif; font-size:1.02rem;}
-.fc-back{background:var(--panel3); color:#c4cae0; transform:rotateY(180deg);}
+.fc-back{background:var(--panel3); color:#c4cae0; transform:rotateY(180deg); overflow-y:auto; font-size:0.83rem;}
 .fc-face .fc-tag{
   position:absolute; top:10px; left:12px; font-family:'JetBrains Mono',monospace; font-size:0.62rem;
   color:var(--muted); letter-spacing:1px;
@@ -573,7 +575,12 @@ footer .credit b{color:var(--text);}
     <div class="section-head">
       <div class="eyebrow">Recall</div>
       <h2>Flip to test yourself</h2>
-      <p>Click a card to reveal the answer. Click again to flip it back.</p>
+      <p>Pick a difficulty level, then click a card to reveal the answer. Click again to flip it back.</p>
+    </div>
+    <div class="gt-tabs level-tabs" id="fcLevelTabs">
+      <button class="active" data-level="easy">Level 1 · Easy (60)</button>
+      <button data-level="med">Level 2 · Medium (50)</button>
+      <button data-level="hard">Level 3 · Hard (40)</button>
     </div>
     <div class="fc-bar">
       <div class="fc-counter" id="fcCounter">0 cards flipped</div>
@@ -587,7 +594,12 @@ footer .credit b{color:var(--text);}
     <div class="section-head">
       <div class="eyebrow">Test Yourself</div>
       <h2>Quiz Bank</h2>
-      <p>Answer options are shuffled every time the quiz loads.</p>
+      <p>Pick a difficulty level. Answer options are shuffled every time the quiz loads.</p>
+    </div>
+    <div class="gt-tabs level-tabs" id="qLevelTabs">
+      <button class="active" data-level="easy">Level 1 · Easy (60)</button>
+      <button data-level="med">Level 2 · Medium (50)</button>
+      <button data-level="hard">Level 3 · Hard (40)</button>
     </div>
     <div class="quiz-bar">
       <div class="quiz-score">Score: <b id="qsScore">0</b> / <span id="qsTotal">0</span> answered</div>
@@ -774,111 +786,372 @@ mmTopics.forEach((topic,i)=>{
   mmList.appendChild(b);
 });
 
-/* ---------- Flash cards ---------- */
-const flashcards = [
-  ["Genome","The total genetic information possessed by an organism."],
-  ["Genetic code","The rule relating nucleotide sequence in mRNA to amino acid sequence in protein."],
-  ["Gene expression order","Transcription (DNA → mRNA) then translation (mRNA → protein)."],
-  ["Nucleotide components","Phosphate group + five-carbon sugar + nitrogen-containing base."],
-  ["DNA bases","Adenine, Thymine, Cytosine, Guanine."],
-  ["RNA bases","Adenine, Uracil, Cytosine, Guanine."],
-  ["Phosphodiester linkage","The bond formed when a phosphate group links two sugars by ester linkages on each side; it carries a negative charge."],
-  ["5' end","The beginning of a DNA/RNA strand — carries a free phosphate group; reading and synthesis start here."],
-  ["3' end","The end of a strand — carries a free hydroxyl group."],
-  ["Antiparallel strands","The two DNA strands run in opposite directions: the 5' end of one faces the 3' end of the other."],
-  ["Complementary base pairing","A pairs with T (or U); G pairs with C — lets one strand's sequence be deduced from the other."],
-  ["Spontaneous mutation","A mutation that occurs naturally, without deliberate treatment."],
-  ["Induced mutation","A mutation created deliberately by treating an organism with a mutagenic agent."],
-  ["Point mutation","A mutation involving only a single base."],
-  ["Null mutation","A mutation that totally inactivates a gene."],
-  ["Base substitution","One base is replaced by another base."],
-  ["Insertion (mutation)","One or more bases are inserted into the DNA sequence."],
-  ["Deletion (mutation)","One or more bases are removed from the DNA sequence."],
-  ["Inversion (mutation)","A DNA segment is flipped but stays at the same overall location."],
-  ["Duplication (mutation)","A DNA segment is copied; the copy usually stays near the original."],
-  ["Translocation (mutation)","A DNA segment moves to a new position, on the same or a different DNA molecule."],
-  ["DNA polymerase proofreading","Keeps replication error rates very low by correcting mismatched bases."],
-  ["Mutagenic agents","Chemicals that interfere with base-pairing, or UV radiation that damages DNA directly."],
-  ["Three HGT mechanisms","Transformation, Transduction, Conjugation."],
-  ["Most common HGT mechanism","Conjugation — especially between donor and recipient of different species."],
-  ["Transformation source DNA","A DNA fragment released from a dead, degraded donor bacterium."],
-  ["RecA protein role","Promotes genetic exchange (breakage and rebinding) between donor and recipient DNA during transformation."],
-  ["Transduction","Transfer of bacterial DNA from one cell to another by a bacteriophage."],
-  ["Generalized vs specialized transduction","Generalized: phage picks up any part of the genome. Specialized: phage picks up only specific portions."],
-  ["Conjugation mechanism","Direct cell-to-cell contact via a pilus, transferring a plasmid or transposon."],
-  ["Conjugation benefits","Can transfer antibiotic resistance, xenobiotic tolerance, or new metabolic abilities."]
+/* ---------- Flash cards & Quiz Bank: leveled data ---------- */
+const flashEasy = [
+  ["Genetics (definition)", "The branch of biology concerned with the study of genes, genetic variation, and heredity in organisms."],
+  ["Gene", "The unit of genetic information."],
+  ["Genome", "The total genetic information possessed by an organism."],
+  ["DNA", "Deoxyribonucleic acid — carries genetic information in bacteria and most viruses; uses thymine."],
+  ["RNA genome viruses", "Some viruses use RNA, not DNA, to encode their genetic information."],
+  ["Transcription", "The process of copying DNA into messenger RNA (mRNA)."],
+  ["Translation", "The process of converting an mRNA sequence into an amino acid sequence (protein)."],
+  ["Gene expression order", "Transcription (DNA → mRNA) happens first, then translation (mRNA → protein)."],
+  ["Genetic code", "The relationship between the nucleotide sequence of mRNA and the amino acid sequence of a protein."],
+  ["Nucleotide", "The basic subunit of DNA and RNA."],
+  ["Nucleotide components", "Phosphate group + five-carbon sugar + nitrogen-containing base."],
+  ["Five-carbon sugar", "One of the three components of a nucleotide, part of the backbone."],
+  ["Nitrogen-containing base", "The component of a nucleotide that varies and carries the genetic 'letter'."],
+  ["DNA bases", "Adenine, thymine, cytosine, guanine."],
+  ["RNA bases", "Adenine, uracil, cytosine, guanine."],
+  ["Bases shared by DNA and RNA", "Adenine, cytosine, and guanine."],
+  ["Sugar-phosphate backbone", "Formed by the phosphate groups and sugars of each nucleic acid strand."],
+  ["Phosphodiester linkage", "The bond formed when a phosphate group is joined to the sugar on either side by ester linkages."],
+  ["Charge of the linking phosphate", "The phosphate group linking two sugars carries a negative charge."],
+  ["5' end", "The strand end with a free phosphate group."],
+  ["3' end", "The strand end with a free hydroxyl (OH) group."],
+  ["Strand polarity", "A nucleic acid strand has direction — it matters which way the bases are read."],
+  ["Antiparallel strands", "The two strands of a DNA double helix run in opposite directions."],
+  ["Double helix", "The twisted, ladder-like three-dimensional shape of double-stranded DNA."],
+  ["Complementary base pairing rule", "A pairs with T (or U); G pairs with C."],
+  ["A–T pairing", "In DNA, adenine always pairs with thymine."],
+  ["G–C pairing", "Guanine always pairs with cytosine."],
+  ["Complementary sequences", "Sequences that can be deduced from one another through base pairing."],
+  ["Why heredity works at the DNA level", "The complementary nature of the double helix allows genetic information to be inherited."],
+  ["Daughter cells and the genome", "Each daughter cell must receive a copy of the parental genome after cell division."],
+  ["Spontaneous mutation", "A mutation that occurs naturally, without deliberate treatment."],
+  ["Induced mutation", "A mutation created deliberately by treating an organism with a mutagenic agent."],
+  ["Mutagen", "An agent that increases the rate of changes (mutations) in DNA."],
+  ["Point mutation", "A mutation that involves only a single base."],
+  ["Null mutation", "A mutation that totally inactivates a gene."],
+  ["Base substitution", "One base is replaced by another base."],
+  ["Insertion (mutation type)", "One or more bases are inserted into the DNA sequence."],
+  ["Deletion (mutation type)", "One or more bases are deleted from the DNA sequence."],
+  ["Inversion (mutation type)", "A segment of DNA is inverted but remains at the same overall location."],
+  ["Duplication (mutation type)", "A segment of DNA is duplicated; the copy usually stays near the original."],
+  ["Translocation (mutation type)", "A segment of DNA is moved to another position, on the same or a different DNA molecule."],
+  ["DNA polymerase proofreading", "Keeps replication error rates low."],
+  ["How UV radiation mutates DNA", "By directly damaging the DNA structure."],
+  ["How chemical mutagens mutate DNA", "By interfering with the structure of base-pairing."],
+  ["Horizontal gene transfer (HGT)", "The way bacteria acquire new genetic traits from other bacteria (not from a parent cell)."],
+  ["Three HGT mechanisms", "Transformation, transduction, and conjugation."],
+  ["Most common HGT mechanism", "Conjugation, especially between different bacterial species."],
+  ["Transformation (source of DNA)", "Uptake of a DNA fragment released by a dead, degraded bacterium."],
+  ["Length of a transformation DNA fragment", "Typically around 10 genes long."],
+  ["Role of nuclease in transformation", "Degrades one strand of the donor DNA fragment."],
+  ["RecA protein", "Promotes genetic exchange (breakage and binding) between donor and recipient DNA."],
+  ["Transduction", "Transfer of genetic material from one bacterium to another by a virus (bacteriophage)."],
+  ["Bacteriophage", "A virus that infects bacterial cells and uses them as hosts."],
+  ["Generalized transduction", "The bacteriophage can pick up any portion of the host's genome."],
+  ["Specialized transduction", "The bacteriophage picks up only specific portions of the host's DNA."],
+  ["Conjugation", "Transfer of genetic material by direct cell-to-cell contact or a pilus bridge."],
+  ["Pilus", "The bridge-like structure connecting donor and recipient cells in conjugation."],
+  ["Element transferred in conjugation", "Most often a plasmid or transposon."],
+  ["A conjugation benefit", "Antibiotic resistance."],
+  ["Timing of genetic exchange in bacteria", "Sexual-type exchange of genetic material occurs before asexual reproduction."],
 ];
+
+const flashMed = [
+  ["RNA as a genome", "Most genetic information is DNA, but some viruses break this pattern and use RNA as their genome instead."],
+  ["Genome replication → heredity", "Replication of the genome is essential, because inheritance of genetically determined traits depends on it."],
+  ["Order carries the message", "Like the 26 letters of the alphabet forming meaningful sentences, the order of the four nucleotides is what carries genetic information."],
+  ["Why DNA and RNA differ by one base", "DNA and RNA share adenine, cytosine and guanine, but DNA uses thymine while RNA uses uracil in its place."],
+  ["Two ester bonds = one phosphodiester bond", "A phosphate group forms an ester linkage to the sugar on each side; together, these two linkages make a phosphodiester linkage."],
+  ["Why phosphate makes DNA negatively charged", "The phosphate group linking the sugars carries a negative charge, giving the DNA backbone its overall negative charge."],
+  ["Why 5' is the 'start'", "The 5' end is the beginning of a strand because both reading of genetic information and synthesis of new strands start there."],
+  ["Meaning of 'antiparallel'", "The two DNA strands run in opposite directions, so the 5' end of one strand sits opposite the 3' end of the other."],
+  ["Practical use of complementary pairing", "If the sequence of one DNA strand is known, the sequence of its partner strand can always be deduced."],
+  ["Complementary pairing and cell division", "Because each strand can template its partner, every daughter cell can receive an accurate copy of the parental genome."],
+  ["Spontaneous vs. induced mutation", "Spontaneous mutations arise naturally and are only a small fraction of all possible mutations; induced mutations are deliberately produced with a mutagen."],
+  ["Point mutation vs. null mutation", "A point mutation is defined by size (a single base change); a null mutation is defined by effect (total loss of gene function) — one type of change among several could cause it."],
+  ["Path from DNA mutation to protein", "A DNA mutation is copied during transcription into the mRNA, and the altered mRNA may then be translated into an altered, possibly defective, protein."],
+  ["Insertion vs. duplication", "Insertion adds bases that were not previously present anywhere in the sequence; duplication copies a segment that already exists."],
+  ["Inversion vs. translocation", "Inversion flips a segment in place; translocation actually moves a segment to a new location, possibly on a different DNA molecule."],
+  ["Why replication errors are rare", "DNA polymerases have a built-in proofreading ability that keeps the natural error rate very low."],
+  ["Two mutagen mechanisms", "Chemical mutagens act by interfering with base-pairing structure, while UV radiation acts by directly damaging the DNA."],
+  ["HGT and bacterial adaptation", "Horizontal gene transfer lets bacteria acquire entirely new genetic traits, helping them adapt quickly to new environments."],
+  ["Why conjugation crosses species lines", "Conjugation is highlighted as the most common route for gene transfer specifically from a donor species to a different recipient species."],
+  ["Transformation, in sequence", "A donor bacterium dies and degrades → its DNA fragment enters a competent recipient → a nuclease degrades one strand → RecA mediates recombination with the recipient's DNA."],
+  ["Role of the single-strand DNA-binding protein", "A competence-specific protein helps handle the single surviving donor DNA strand as it enters the recipient during transformation."],
+  ["Why only one donor strand enters in transformation", "Because a nuclease degrades one of the two donor DNA strands, leaving only a single strand able to enter the recipient."],
+  ["Generalized vs. specialized transduction", "Generalized transduction can package any part of the host genome; specialized transduction packages only specific portions of it."],
+  ["A practical use of transduction", "Scientists exploit the transduction process to insert genes of interest into host cells using bacteriophages."],
+  ["Transduction, in sequence", "Phage injects its DNA → phage enzymes break down host DNA → new phage particles (some carrying host DNA) assemble → these infect a recipient → recombination inserts donor DNA into the recipient's chromosome."],
+  ["What a 'defective phage' carries", "A phage particle that has packaged bacterial (host) DNA instead of, or along with, its own phage genome."],
+  ["Why conjugative plasmids self-exclude", "Most conjugative plasmids carry systems that prevent transfer into a recipient that already contains a similar element."],
+  ["Beneficial vs. harmful conjugative elements", "Some transferred elements benefit the recipient (antibiotic resistance, xenobiotic tolerance, new metabolic ability); others behave like bacterial parasites."],
+  ["Machinery of conjugation", "A pilus forms the physical connection, while a mobile plasmid (or transposon) is the genetic element actually transferred."],
+  ["Meaning of 'sexual reproduction before asexual' in bacteria", "The genetic exchange typical of conjugation, transformation, and transduction is described as occurring before the bacterium divides asexually."],
+  ["Direction and replication", "Because nucleic acids are synthesized starting at the 5' end, the direction of a strand affects how and where new DNA can be built."],
+  ["Genetic code links to gene expression", "The genetic code is the rule that lets gene expression — transcription then translation — turn DNA information into a working protein."],
+  ["Why sequence alterations differ from segment-level mutations", "Base substitution, insertion, and deletion change the base sequence itself, while inversion, duplication, and translocation act on whole DNA segments."],
+  ["Mutation vs. horizontal gene transfer as sources of change", "Mutation alters a bacterium's own existing DNA sequence, while horizontal gene transfer brings in DNA that originated in a different organism."],
+  ["Backbone direction vs. bases", "The phosphate–sugar backbone defines a strand's fixed 5'→3' direction, regardless of which base happens to sit on each sugar."],
+  ["Why '~10 genes long' matters", "It shows that transformation transfers a discrete DNA fragment, not the recipient's entire genome, in one uptake event."],
+  ["Why RecA is essential to transformation", "RecA physically breaks and rejoins paired DNA segments, which is what integrates the donor fragment into the recipient's chromosome."],
+  ["Where mutations matter most for phenotype", "Mutations most clearly affect the phenotype when they occur within the protein-coding sequence of a gene."],
+  ["Proofreading lowers, but doesn't erase, mutation", "DNA polymerase proofreading keeps the spontaneous mutation rate low, but spontaneous mutations still occur at some frequency."],
+  ["Mutagen vs. mutation", "A mutagen is the causal agent (chemical or UV); the mutation is the resulting change in the DNA sequence."],
+  ["Common pattern across all three HGT routes", "In every mechanism, DNA moves from a donor source — a dead cell, a phage, or a live donor cell — into a recipient bacterium."],
+  ["Only transduction needs a virus", "Of the three HGT mechanisms, only transduction relies on a bacteriophage as the vehicle carrying donor DNA."],
+  ["Comparing HGT 'vehicles'", "Transformation moves a free DNA fragment; transduction moves DNA packaged in a virus; conjugation moves DNA through direct cell contact."],
+  ["Donor cell status: transformation vs. conjugation", "In transformation the donor bacterium is already dead; in conjugation the donor cell stays alive throughout the transfer."],
+  ["Why 'new donors' appear after conjugation", "After receiving a conjugative plasmid, a former recipient can grow its own pilus and become a donor itself."],
+  ["The 'transformasome'", "The surface structure on a competent recipient bacterium where donor DNA is bound and taken up during transformation."],
+  ["Why 'null mutation' is a genotypic term", "It describes loss of a gene's function at the DNA/genetic level, not necessarily a visible physical trait."],
+  ["Why reading direction matters for the genetic code", "Transcription and translation both proceed in a fixed 5'→3' direction, so reading the sequence correctly depends on that direction."],
+  ["Mutation + HGT together explain bacterial adaptability", "Mutation changes a bacterium's own genes, while HGT adds genes from elsewhere — together they widen the range of possible adaptations."],
+  ["Why the lecture separates 'types' of mutation from their 'causes'", "Base substitution, insertion, deletion, inversion, duplication, and translocation describe what changes in the sequence; mutagens (chemicals, UV) describe what causes the change."],
+];
+
+const flashHard = [
+  ["From replication error to altered protein", "A replication error changes the DNA sequence, is copied into daughter cells at division, is transcribed into mRNA, and may then be translated into an altered or defective protein — so one DNA-level error can ripple all the way to a protein-level effect."],
+  ["Coding vs. non-coding mutation impact", "The lecture ties phenotypic effects specifically to mutations 'within the protein coding sequence of a gene,' implying a mutation elsewhere in the DNA is less likely to change the organism's observable traits."],
+  ["Two routes to the same outcome: mutagen action", "UV radiation and chemical mutagens both raise the mutation rate, but by different routes — UV directly damages DNA structure, while chemicals disrupt the chemistry of base-pairing."],
+  ["Substitution vs. insertion/deletion", "Base substitution swaps one base for another without changing how many bases are present, whereas insertion and deletion actually change the total number of bases in the sequence."],
+  ["Why antiparallel strands are required for the backbone chemistry", "Since each strand's phosphodiester backbone is built 5'-phosphate to 3'-OH, two complementary strands can only base-pair properly along their length if they run in opposite (antiparallel) directions."],
+  ["Consequence of double-strand nuclease action in transformation", "The lecture specifies that a nuclease degrades one donor strand so a single strand can enter the recipient; if both strands were destroyed, no donor DNA would remain to transfer."],
+  ["Why conjugation dominates cross-species transfer", "Conjugation does not require a dead donor (unlike transformation) or a compatible phage host range (unlike transduction) — it only needs direct cell contact, which likely explains why it is the most common route between different species."],
+  ["Life cycle of a transferred conjugative plasmid", "A pilus links donor and recipient, transfer machinery (relaxosome/transferosome) moves a plasmid copy into the recipient, and the recipient itself can then extend a pilus and act as a 'new donor,' spreading the plasmid onward."],
+  ["Defective phage vs. virulent phage", "A defective phage has packaged host bacterial DNA in place of (or with) its own genome and is the particle responsible for delivering donor DNA in transduction, unlike a normal virulent phage carrying only its own genetic material."],
+  ["Why specialized transduction is site-limited", "Because specialized transducing phages pick up only specific portions of host DNA (unlike the random pickup in generalized transduction), the genes they transfer are effectively restricted to particular genome locations."],
+  ["Null mutation as a shared endpoint", "Because a null mutation is defined by its effect — total loss of gene function — rather than by its cause, several different sequence alterations (substitution, insertion, deletion, inversion, duplication, translocation) could each independently produce one."],
+  ["The alphabet analogy, applied strictly", "Just as a fixed set of 26 letters generates unlimited meaning purely through order, the four nucleotide types generate the entire diversity of genetic information purely through their sequence, not their chemical variety."],
+  ["RecA's broader significance", "RecA's breakage-and-rejoining recombination in transformation shows that uptake of foreign DNA alone is not enough — active recombination is what makes transferred DNA a permanent, heritable part of the recipient genome."],
+  ["Consequence of losing complementary pairing", "Since it is complementarity that lets each strand template an accurate copy of the other, its absence would prevent faithful second-strand synthesis, undermining accurate inheritance at cell division."],
+  ["Two distinct jobs: replication vs. expression", "Genome replication preserves genetic information across generations of cells, while gene expression (transcription + translation) executes that information within a single cell — one is about continuity, the other about function."],
+  ["Why mutation alone isn't enough for adaptation", "Mutation only reshuffles a bacterium's own existing genes, but horizontal gene transfer supplies entirely new genetic material from other bacteria — together they give a much wider range of possible adaptive traits."],
+  ["Donor viability across the three HGT routes", "Transformation requires an already-dead, degraded donor; transduction requires a phage that has replicated in a host cell; conjugation is the only route where the donor cell must stay alive throughout the transfer."],
+  ["Why plasmid self-exclusion systems make sense", "A system that stops a conjugative plasmid transferring into a recipient that already carries a similar element likely prevents redundant, wasted transfer events into cells that would gain no new benefit."],
+  ["'Sexual' exchange before 'asexual' division", "Conjugation (like transformation and transduction) is framed as an exchange of genetic material between two cells, and the lecture places this exchange before the bacterium's normal asexual (binary fission) reproduction."],
+  ["Why a DNA-level mutation outlasts an mRNA-level change", "Because DNA is the permanent template for transcription, a mutation there is copied into a fresh mRNA molecule every time the gene is transcribed — unlike a change confined to a single, short-lived mRNA molecule."],
+  ["Directionality constraint on synthesis", "Because nucleotides are linked 5'-phosphate to 3'-OH and synthesis starts at the 5' end, new bases can only be added onto a free 3'-OH — fixing the direction of nucleic acid synthesis as 5'→3'."],
+  ["Complexity from a 4-letter code", "The lecture's information lies not in having only four nucleotide types but in the length and order in which they appear along a strand, just as a small alphabet can build unlimited words and sentences."],
+  ["Random vs. constrained DNA packaging in transduction", "Generalized transducing phages appear to package bacterial DNA fragments without preference for location, while specialized transducing phages are constrained to specific portions — a difference in how, not just how much, DNA is packaged."],
+  ["Same molecular change, different cause", "Spontaneous and induced mutations are both, at the molecular level, alterations of the DNA base sequence; what differs is only the trigger — a natural process versus deliberate mutagen treatment — not the type of change itself."],
+  ["Conjugative elements as 'parasites'", "Framing some conjugative elements as bacterial parasites implies they persist mainly to propagate themselves, sometimes at a cost to the host, contrasting with elements that clearly benefit the recipient."],
+  ["Backbone direction vs. informational content", "The bases carry the genetic message, but it is the fixed 5'→3' backbone direction that determines the order in which those bases must be read for the genetic code to be interpreted correctly."],
+  ["Classifying mutations by base-pair count", "Insertion and deletion change the total number of bases; duplication increases the total by adding a copy; substitution, inversion, and translocation leave the total number of bases unchanged."],
+  ["Shared purpose of RecA and transduction recombination", "Whether donor DNA arrives naked (transformation) or packaged in a phage (transduction), it must be physically recombined into the recipient's chromosome to become a permanent, heritable addition to the genome."],
+  ["Why conjugation crosses species barriers most readily", "Unlike transformation (which needs dead donor DNA) or transduction (which depends on phage host range), conjugation's direct pilus contact is presented as the most effective route for transfer to a different recipient species."],
+  ["Why scientists need induced mutations", "Since proofreading keeps the spontaneous mutation rate naturally low, deliberately using mutagens to create induced mutations gives researchers enough genetic variants to study gene function in practice."],
+  ["Ester linkage vs. phosphodiester linkage", "An ester linkage alone describes just one side of the phosphate–sugar bond; because the phosphate bonds to a sugar on each side, the complete two-sided structure is properly called a phosphodiester linkage."],
+  ["Why replication must precede division", "Because each daughter cell needs its own copy of the parental genome, the genome must be fully replicated before division — otherwise only one daughter could receive the original DNA."],
+  ["A mutation's effect beyond the coding sequence", "Since gene expression depends on both transcription and translation, an alteration affecting either step — not just the coding sequence itself — could still change whether or how much protein is made."],
+  ["Point mutation vs. translocation: what really changes", "A point mutation changes a single base's identity without altering genome size; a translocation moves a whole segment to a new position without necessarily changing the total base-pair count either — the key difference is what changes (identity vs. location)."],
+  ["Null mutation: genotype, not phenotype", "Because 'null mutation' is defined at the level of gene function (a genotypic term), a gene could be nulled without the lecture specifying any particular visible phenotypic consequence."],
+  ["Internal vs. external sources of bacterial genetic change", "Mutation is an internally generated change to a bacterium's own DNA; horizontal gene transfer introduces DNA that originated in a different organism — the fundamental difference is the origin of the new genetic information."],
+  ["Why the recipient in transformation must be 'living and competent'", "Only a living, competent bacterium has the surface DNA-binding proteins and active recombination machinery (like RecA) needed to take up and integrate donor DNA — a dead or non-competent cell could not complete transformation."],
+  ["Why 'breaking down host DNA' fits generalized transduction", "Degrading the host chromosome into fragments before phage assembly, without favoring any one gene, is exactly what allows essentially any portion of the host genome to end up packaged — matching the definition of generalized transduction."],
+  ["What the relaxosome/transferosome imply about conjugation", "Naming distinct intermediate structures for processing and moving the plasmid indicates that conjugation is a regulated, multi-step molecular process, not passive diffusion of DNA between two touching cells."],
+  ["Tying the whole lecture together", "Nucleic acid chemistry and complementary pairing explain how genetic information is stored and copied; mutation explains how that stored information changes within a lineage; and horizontal gene transfer explains how bacteria acquire wholly new information from other bacteria."],
+];
+
+const quizEasy = [
+  {q:"Genetics is defined as the branch of biology concerned with:", a:["Genes, genetic variation, and heredity", "Cell membrane transport only", "Bacterial staining techniques", "Antibiotic pharmacology"], c:0},
+  {q:"The total genetic information possessed by an organism is called its:", a:["Phenotype", "Genome", "Proteome", "Karyotype"], c:1},
+  {q:"Gene expression proceeds in which order?", a:["Translation then transcription", "Transcription then translation", "Replication then translation only", "Translation only"], c:1},
+  {q:"The rule relating nucleotide sequence to amino acid sequence is called the:", a:["Genetic code", "Reading frame law", "Central axiom", "Codon rule"], c:0},
+  {q:"How many components does each nucleotide have?", a:["Two", "Three", "Four", "Five"], c:1},
+  {q:"The three components of a nucleotide are:", a:["Phosphate, sugar, base", "Sugar, protein, lipid", "Base, ribosome, enzyme", "Phosphate, amino acid, sugar"], c:0},
+  {q:"Which base does DNA use that RNA does NOT?", a:["Adenine", "Guanine", "Cytosine", "Thymine"], c:3},
+  {q:"Which base does RNA use in place of thymine?", a:["Uracil", "Inosine", "Xanthine", "Cytosine"], c:0},
+  {q:"Which bases are used by BOTH DNA and RNA?", a:["Thymine and Uracil", "Adenine, Cytosine, Guanine", "Only Adenine", "Only Guanine"], c:1},
+  {q:"The sugar-phosphate backbone of a nucleic acid strand is formed by:", a:["Bases stacking together", "Hydrogen bonds between strands", "Phosphate groups and sugars", "Amino acid chains"], c:2},
+  {q:"The bond linking two nucleotide sugars through a phosphate group is called a:", a:["Peptide bond", "Phosphodiester linkage", "Glycosidic bond", "Hydrogen bond"], c:1},
+  {q:"The phosphate group linking two sugars carries what charge?", a:["Positive", "Neutral", "Negative", "Variable"], c:2},
+  {q:"The 5' end of a DNA strand is characterized by a free:", a:["Hydroxyl group", "Phosphate group", "Amino group", "Carboxyl group"], c:1},
+  {q:"The 3' end of a DNA strand is characterized by a free:", a:["Phosphate group", "Hydroxyl group", "Methyl group", "Sulfate group"], c:1},
+  {q:"Why is the 5' end considered the beginning of a DNA/RNA strand?", a:["It is physically longer", "Genetic information is read and synthesis starts there", "It has more hydrogen bonds", "It contains the start codon only"], c:1},
+  {q:"The two strands of a DNA double helix are described as:", a:["Parallel", "Antiparallel", "Perpendicular", "Randomly oriented"], c:1},
+  {q:"If one DNA strand has an A at a given position, the complementary strand will have:", a:["G", "C", "T", "A"], c:2},
+  {q:"If one DNA strand has a G at a given position, the complementary strand will have:", a:["C", "T", "A", "G"], c:0},
+  {q:"Complementary base pairing is significant because it:", a:["Prevents mutations entirely", "Allows the sequence of one strand to be deduced from the other", "Only applies to RNA", "Determines cell shape"], c:1},
+  {q:"In cell division, complementary base pairing ensures that:", a:["Only one daughter cell gets DNA", "Each daughter cell receives a copy of the parental genome", "Mutations are eliminated", "Proteins are inherited directly"], c:1},
+  {q:"A mutation that occurs naturally, without deliberate treatment, is called:", a:["An induced mutation", "A spontaneous mutation", "A null mutation", "A silent mutation"], c:1},
+  {q:"A mutation deliberately created by treating an organism with a mutagenic agent is called:", a:["A spontaneous mutation", "An induced mutation", "A point mutation", "A frameshift mutation"], c:1},
+  {q:"A mutation involving only a single base is called a:", a:["Null mutation", "Point mutation", "Frameshift mutation", "Silent mutation"], c:1},
+  {q:"A mutation that totally inactivates a gene is termed a:", a:["Null mutation", "Point mutation", "Missense mutation", "Silent mutation"], c:0},
+  {q:"Replacing one base with another base in a DNA sequence is called:", a:["Insertion", "Deletion", "Base substitution", "Duplication"], c:2},
+  {q:"Adding one or more bases into a DNA sequence is called:", a:["Insertion", "Inversion", "Deletion", "Translocation"], c:0},
+  {q:"Removing one or more bases from a DNA sequence is called:", a:["Duplication", "Deletion", "Inversion", "Substitution"], c:1},
+  {q:"A DNA segment that is flipped but stays at the same overall location describes:", a:["Duplication", "Translocation", "Inversion", "Deletion"], c:2},
+  {q:"A DNA segment that is copied, with the copy usually staying near the original, describes:", a:["Duplication", "Inversion", "Substitution", "Insertion"], c:0},
+  {q:"A DNA segment moving to a new position on the same or a different DNA molecule describes:", a:["Inversion", "Duplication", "Translocation", "Deletion"], c:2},
+  {q:"Low error rates during DNA replication are mainly due to:", a:["Slow replication speed", "The proofreading ability of DNA polymerase", "High cellular temperature", "Absence of mutagens"], c:1},
+  {q:"UV radiation causes mutations primarily by:", a:["Interfering with base-pairing chemically", "Directly damaging DNA structure", "Adding extra phosphate groups", "Removing the sugar backbone"], c:1},
+  {q:"How many mechanisms of horizontal gene transfer exist in bacteria?", a:["Two", "Three", "Four", "Five"], c:1},
+  {q:"The three mechanisms of horizontal gene transfer in bacteria are:", a:["Mitosis, meiosis, fusion", "Transformation, transduction, conjugation", "Replication, translation, transcription", "Diffusion, osmosis, endocytosis"], c:1},
+  {q:"Which mechanism is the most common for horizontal gene transfer, especially between different bacterial species?", a:["Transformation", "Transduction", "Conjugation", "Mutation"], c:2},
+  {q:"In transformation, the DNA that enters the recipient bacterium originates from:", a:["A living bacteriophage", "A dead, degraded donor bacterium", "The recipient's own genome", "A mitochondrion"], c:1},
+  {q:"During transformation, which protein promotes genetic exchange between donor and recipient DNA?", a:["RecA protein", "DNA polymerase III", "RNA polymerase", "Ligase A"], c:0},
+  {q:"Transduction is the transfer of bacterial genetic material by way of a:", a:["Plasmid", "Bacteriophage (virus)", "Pilus", "Nucleoid"], c:1},
+  {q:"In generalized transduction, the bacteriophage:", a:["Can pick up any portion of the host genome", "Can only pick up specific portions of the genome", "Cannot carry host DNA at all", "Only transfers plasmids"], c:0},
+  {q:"In specialized transduction, the bacteriophage:", a:["Picks up any random DNA fragment", "Picks up only specific portions of the host's DNA", "Never infects a new host", "Transfers RNA only"], c:1},
+  {q:"Bacterial conjugation transfers genetic material via:", a:["Airborne transmission", "Direct cell-to-cell contact through a pilus", "Spontaneous mutation", "Viral infection"], c:1},
+  {q:"The genetic element most often transferred during conjugation is a:", a:["Ribosome", "Plasmid or transposon", "Mitochondrion", "Cell wall fragment"], c:1},
+  {q:"A benefit that conjugation-transferred genes often provide to the recipient includes:", a:["Antibiotic resistance", "Loss of a cell wall", "Permanent sterility", "Reduced replication rate"], c:0},
+  {q:"According to the lecture, in bacteria the exchange of genetic material (a form of \"sexual\" reproduction) occurs:", a:["After asexual reproduction", "Before asexual reproduction", "Only during sporulation", "Never in bacteria"], c:1},
+  {q:"Genetic information in bacteria and many viruses is encoded in DNA, but some viruses instead use:", a:["Protein", "RNA", "Lipid", "Carbohydrate"], c:1},
+  {q:"The units of genetic information are known as:", a:["Genomes", "Genes", "Proteins", "Chromatids"], c:1},
+  {q:"Replication of the genome is essential mainly for:", a:["Cell shape", "Inheritance of genetically determined traits", "Energy production", "Cell wall synthesis"], c:1},
+  {q:"The order of nucleotides carrying genetic information is compared in the lecture to:", a:["The order of amino acids in a random peptide", "The order of the 26 letters of the alphabet forming a sentence", "The order of colors in a rainbow", "The order of atoms in water"], c:1},
+  {q:"According to the lecture, how many different nucleotides exist in each type of nucleic acid?", a:["Two", "Three", "Four", "Twenty"], c:2},
+  {q:"In the transformation process, the DNA fragment released by the donor bacterium is typically about:", a:["1 gene long", "10 genes long", "100 genes long", "The entire genome"], c:1},
+  {q:"During transformation, the protein that helps handle the incoming single-stranded donor DNA is the:", a:["Competence-specific single-strand DNA-binding protein", "Ribosomal protein S1", "DNA gyrase", "Sigma factor"], c:0},
+  {q:"Most conjugative plasmids have systems that ensure the recipient cell:", a:["Immediately dies after transfer", "Does not already contain a similar element", "Cannot ever divide again", "Loses its chromosome"], c:1},
+  {q:"Besides antibiotic resistance, another benefit conjugation can transfer to a recipient is:", a:["Xenobiotic tolerance", "Permanent immunity to phages", "Loss of the cell membrane", "Spontaneous sporulation"], c:0},
+  {q:"Some conjugative genetic elements that are harmful to the recipient are described as acting like:", a:["Beneficial symbionts", "Bacterial parasites", "Antibiotics", "Vitamins"], c:1},
+  {q:"After receiving a plasmid during conjugation, a recipient bacterium can become:", a:["Permanently non-viable", "A new donor", "A bacteriophage", "A spore"], c:1},
+  {q:"The surface structure on a competent recipient bacterium where donor DNA is taken up during transformation is called the:", a:["Transformasome", "Ribosome", "Flagellum", "Mesosome"], c:0},
+  {q:"During transduction, phage enzymes act on the host bacterial DNA by:", a:["Replicating it perfectly", "Breaking it down", "Converting it into RNA", "Exporting it unchanged"], c:1},
+  {q:"A bacteriophage particle that ends up carrying host bacterial DNA instead of (or with) its own genome is called a:", a:["Virulent phage", "Defective phage", "Lysogenic phage", "Temperate phage"], c:1},
+  {q:"Besides DNA, biological information in cells and viruses can also be carried by:", a:["RNA", "Lipids only", "Carbohydrates only", "ATP only"], c:0},
+  {q:"According to the lecture, mutation is described as a modification of:", a:["Cell wall thickness", "Gene function within a bacterium", "Ribosome number", "Flagellar structure"], c:1},
+];
+
+const quizMed = [
+  {q:"Which statement best explains why some viruses break the usual pattern of genetic information storage?", a:["All viruses use only protein for inheritance", "Most organisms use DNA, but some viruses use RNA instead", "RNA is never found in any virus", "DNA is only found in bacteria"], c:1},
+  {q:"Why does the lecture describe genome replication as 'essential'?", a:["It is optional but convenient", "It is required for inheritance of genetically determined traits", "It only matters for RNA viruses", "It prevents all mutations"], c:1},
+  {q:"The letters-of-the-alphabet analogy in the lecture is used to explain that genetic information depends mainly on:", a:["The chemical identity of a single base", "The order of the nucleotides", "The number of chromosomes", "The size of the nucleus"], c:1},
+  {q:"DNA and RNA both use adenine, cytosine, and guanine, but they differ because:", a:["DNA uses thymine and RNA uses uracil", "DNA uses uracil and RNA uses thymine", "DNA has five bases and RNA has three", "RNA never contains guanine"], c:0},
+  {q:"A phosphodiester linkage is best described as:", a:["A single ester bond between a base and a sugar", "Two ester linkages joining a phosphate to sugars on either side", "A hydrogen bond between two bases", "A bond found only in proteins"], c:1},
+  {q:"Why does the DNA backbone carry an overall negative charge?", a:["Because the sugars are negatively charged", "Because the bases attract electrons", "Because the phosphate group linking the sugars carries a negative charge", "Because of hydrogen bonding between strands"], c:2},
+  {q:"The 5' end is called the 'beginning' of a strand because:", a:["It is chemically identical to the 3' end", "Reading of genetic information and synthesis of new strands both start there", "It never participates in base pairing", "It contains only guanine"], c:1},
+  {q:"Two DNA strands being 'antiparallel' means that:", a:["Both strands have their 5' ends on the same side", "The 5' end of one strand is opposite the 3' end of the other", "The strands never touch each other", "One strand has no phosphate backbone"], c:1},
+  {q:"The practical benefit of complementary base pairing is that:", a:["Mutations can never occur", "The sequence of one strand allows the other strand's sequence to be deduced", "Only one strand is ever needed for replication", "Bases can pair with any other base"], c:1},
+  {q:"Complementary base pairing supports inheritance mainly by ensuring that:", a:["Only one daughter cell needs DNA", "Each daughter cell can receive an accurate copy of the parental genome", "RNA replaces DNA during division", "Mutations are copied more efficiently"], c:1},
+  {q:"The key difference between spontaneous and induced mutations is:", a:["Their molecular mechanism of DNA change", "Whether they arise naturally or are deliberately caused by a mutagen", "Induced mutations never affect phenotype", "Spontaneous mutations only occur in viruses"], c:1},
+  {q:"A 'point mutation' and a 'null mutation' differ mainly because:", a:["A point mutation is defined by its size (a single base); a null mutation is defined by its effect (loss of gene function)", "They are exactly the same thing", "A null mutation always involves more than one gene", "Point mutations cannot inactivate a gene"], c:0},
+  {q:"According to the lecture, an altered DNA base sequence can ultimately affect a protein because:", a:["Proteins are made directly from DNA without any intermediate", "DNA is used as the template for transcription, so the change passes to mRNA and can alter the resulting protein", "Mutations only affect ribosomes", "RNA polymerase repairs all DNA mutations automatically"], c:1},
+  {q:"What distinguishes an insertion mutation from a duplication mutation?", a:["Insertion adds new bases; duplication copies an existing DNA segment", "They are identical concepts", "Duplication removes bases; insertion inverts a segment", "Insertion only occurs in RNA"], c:0},
+  {q:"What is the key difference between an inversion and a translocation?", a:["Inversion flips a segment in place; translocation moves a segment to a new location", "Translocation only happens in viruses", "Inversion always increases genome size", "They both delete DNA permanently"], c:0},
+  {q:"Spontaneous mutation rates are usually low mainly because of:", a:["The absence of any DNA polymerase", "The proofreading ability of DNA polymerases", "The lack of any bacterial replication", "High concentrations of mutagens"], c:1},
+  {q:"Chemical mutagens and UV radiation both increase mutation rates, but they differ in that:", a:["Chemicals interfere with base-pairing structure while UV directly damages DNA", "UV only affects RNA, never DNA", "Chemicals only work on dead cells", "UV always causes null mutations"], c:0},
+  {q:"Horizontal gene transfer helps bacteria adapt to new environments mainly because it:", a:["Slows down bacterial reproduction", "Lets bacteria acquire new genetic traits from other bacteria", "Eliminates the need for DNA polymerase", "Prevents any further mutation"], c:1},
+  {q:"Conjugation is highlighted as especially important for spreading traits between different bacterial species because it:", a:["Is the most common mechanism for gene transfer to a different recipient species", "Only works within the exact same species", "Requires the donor bacterium to be dead", "Cannot transfer plasmids"], c:0},
+  {q:"Put the steps of transformation in the correct order.", a:["Donor dies and degrades → DNA fragment enters recipient → nuclease degrades one strand → RecA mediates recombination", "RecA mediates recombination → donor dies → nuclease acts → DNA enters recipient", "DNA enters recipient → donor dies afterward → no recombination occurs", "Nuclease acts first on the recipient, not the donor DNA"], c:0},
+  {q:"The competence-specific single-strand DNA-binding protein functions in transformation to:", a:["Destroy all incoming donor DNA", "Help manage the single surviving donor DNA strand as it enters the recipient", "Replace RecA entirely", "Convert DNA into RNA"], c:1},
+  {q:"Only a single strand of donor DNA typically enters the recipient during transformation because:", a:["Both strands always enter intact", "A nuclease degrades one of the two donor strands", "The recipient rejects double-stranded DNA outright", "Bacteria cannot take up any DNA"], c:1},
+  {q:"The key functional difference between generalized and specialized transduction is:", a:["Generalized transduction can package any part of the host genome, while specialized transduction only packages specific portions", "Specialized transduction is more common in nature", "Generalized transduction never involves a bacteriophage", "They are functionally identical"], c:0},
+  {q:"Scientists exploit transduction in the laboratory mainly to:", a:["Kill target bacteria only", "Insert genes of interest into host cells using bacteriophages", "Prevent any DNA transfer", "Replace conjugation entirely"], c:1},
+  {q:"Which sequence correctly summarizes the transduction cycle described in the lecture?", a:["Phage injects DNA → host DNA is broken down → new phages (some carrying host DNA) assemble → these infect a new host → recombination integrates donor DNA", "Recombination occurs first, then the phage injects DNA", "Host DNA is never affected during transduction", "New phages never carry any host DNA"], c:0},
+  {q:"A 'defective phage' in the context of transduction is best understood as:", a:["A phage that cannot infect any cell", "A phage particle that has packaged bacterial DNA instead of, or along with, its own genome", "A phage with no genetic material at all", "A phage that only infects plants"], c:1},
+  {q:"Most conjugative plasmids carry exclusion systems mainly to:", a:["Ensure the recipient does not already contain a similar element", "Prevent the donor cell from surviving", "Stop the plasmid from ever replicating", "Force the recipient to die immediately"], c:0},
+  {q:"The lecture contrasts beneficial and harmful conjugative elements by noting that:", a:["All conjugative elements are always beneficial", "Some confer benefits like antibiotic resistance, while others act like bacterial parasites", "Harmful elements can never be transferred by conjugation", "Beneficial elements are never plasmids"], c:1},
+  {q:"The physical machinery of conjugation described in the lecture includes:", a:["A pilus forming the connection, with a plasmid or transposon being transferred", "Only diffusion through the cell wall", "A phage capsid injecting DNA", "Ribosomes fusing between cells"], c:0},
+  {q:"The statement that 'sexual reproduction occurs before asexual reproduction' in bacteria refers to:", a:["Genetic exchange (as in conjugation) happening before the cell divides by binary fission", "Bacteria alternating between male and female forms", "Asexual reproduction always happening first", "A process unrelated to horizontal gene transfer"], c:0},
+  {q:"Because nucleic acid synthesis starts at the 5' end, this implies that:", a:["New nucleotides are only added at the 3' end of an existing strand, extending it in the 5'→3' direction", "Synthesis can start equally at either end", "The 3' end is irrelevant to replication", "Only RNA polymerase can begin synthesis"], c:0},
+  {q:"The genetic code connects to gene expression because:", a:["It has no relationship to transcription or translation", "It is the rule that allows transcription and translation to convert DNA information into protein", "It only applies to RNA viruses", "It replaces the need for translation"], c:1},
+  {q:"Base substitution, insertion, and deletion are grouped together mainly because they:", a:["All change the DNA base sequence itself, rather than acting on a whole segment", "Only occur in RNA", "Never affect protein-coding regions", "Always create null mutations"], c:0},
+  {q:"The fundamental difference between mutation and horizontal gene transfer as sources of bacterial variation is:", a:["Mutation alters a bacterium's own existing DNA; horizontal gene transfer brings in DNA from another organism", "They are functionally identical processes", "Mutation always involves a virus", "Horizontal gene transfer cannot involve plasmids"], c:0},
+  {q:"The fixed 5'→3' direction of the sugar-phosphate backbone matters because:", a:["It determines the direction of a strand independent of which bases are present", "It changes the chemical identity of each base", "It only matters for RNA, not DNA", "It prevents any base pairing from occurring"], c:0},
+  {q:"Specifying that a transformation DNA fragment is 'about 10 genes long' emphasizes that:", a:["The whole bacterial genome is transferred at once", "Only a limited, discrete fragment of donor DNA is exchanged, not the entire genome", "No genes are actually transferred during transformation", "The fragment size is always exactly fixed at 10 genes in every case"], c:1},
+  {q:"RecA protein is essential to transformation because it:", a:["Physically carries out the breakage and rebinding needed to integrate donor DNA into the recipient's chromosome", "Only degrades the donor DNA", "Prevents any recombination from occurring", "Functions exclusively during translation"], c:0},
+  {q:"The lecture links mutation's effect on phenotype most strongly to mutations occurring:", a:["Anywhere in the genome equally", "Within the protein-coding sequence of a gene", "Only in RNA, never DNA", "Exclusively in plasmid DNA"], c:1},
+  {q:"DNA polymerase proofreading and spontaneous mutation are related in that:", a:["Proofreading keeps the spontaneous mutation rate low, but does not eliminate mutations entirely", "Proofreading always eliminates all spontaneous mutations", "Proofreading has no effect on mutation rate", "Spontaneous mutations only occur when proofreading is absent"], c:0},
+  {q:"A mutagen and a mutation differ in that:", a:["A mutagen is the causal agent (chemical or UV); a mutation is the resulting DNA change", "They are exactly the same thing", "A mutation always precedes its mutagen", "Mutagens only act on RNA"], c:0},
+  {q:"A feature common to transformation, transduction, and conjugation is that:", a:["None of them actually move DNA between cells", "In each mechanism, DNA moves from some donor source into a recipient bacterium", "They all require a living donor bacterium", "They all require the same donor DNA fragment size"], c:1},
+  {q:"Of the three horizontal gene transfer mechanisms, the one that specifically requires a virus is:", a:["Transformation", "Conjugation", "Transduction", "None of them"], c:2},
+  {q:"Comparing the three HGT 'vehicles' for DNA transfer accurately pairs:", a:["Transformation—free DNA fragment; Transduction—bacteriophage; Conjugation—direct cell contact/pilus", "Transformation—pilus; Transduction—free DNA fragment; Conjugation—bacteriophage", "All three mechanisms use the same vehicle", "Conjugation—bacteriophage; Transduction—pilus"], c:0},
+  {q:"Regarding donor cell viability, transformation differs from conjugation in that:", a:["In transformation the donor is already dead; in conjugation the donor stays alive throughout transfer", "In transformation the donor stays alive; in conjugation the donor is dead", "Both require a dead donor", "Neither requires any donor cell"], c:0},
+  {q:"After conjugation, a former recipient bacterium can become a 'new donor' because:", a:["It has received a conjugative plasmid and can now extend its own pilus to transfer it further", "It has lost all of its DNA", "It becomes a bacteriophage", "It can no longer reproduce"], c:0},
+  {q:"The term 'transformasome' refers to:", a:["The surface structure on a competent bacterium where donor DNA is bound and taken up", "A type of bacteriophage", "The plasmid transferred during conjugation", "An enzyme that degrades mRNA"], c:0},
+  {q:"Describing a 'null mutation' as a genotypic term implies that:", a:["It describes the DNA/gene-function level, not necessarily a visible physical trait", "It only refers to visible physical traits", "It cannot occur in bacteria", "It is unrelated to gene inactivation"], c:0},
+  {q:"Correct 5'→3' reading direction matters for gene expression because:", a:["Transcription and translation both proceed in this fixed direction to interpret the genetic code correctly", "Reading direction has no effect on gene expression", "Translation reads mRNA 3'→5' while transcription reads 5'→3'", "Only replication depends on reading direction"], c:0},
+  {q:"Mutation and horizontal gene transfer together explain bacterial adaptability because:", a:["Mutation changes a bacterium's own genes while HGT adds genes from other bacteria, widening possible adaptive changes", "They are mutually exclusive processes that never occur in the same species", "Only mutation contributes to adaptability", "HGT eliminates the need for mutation to ever occur"], c:0},
+  {q:"The lecture's distinction between mutation 'types' and mutation 'causes' separates:", a:["What changes in the sequence (substitution, insertion, deletion, etc.) from what triggers the change (mutagens like chemicals or UV)", "Two identical concepts with different names", "DNA mutations from RNA mutations only", "Bacterial mutations from viral mutations only"], c:0},
+];
+
+const quizHard = [
+  {q:"Tracing a replication error to a defective protein requires which correct sequence of events?", a:["The error changes the DNA sequence → is copied to daughter cells at division → is transcribed into mRNA → may be translated into an altered protein", "The protein changes first, then the DNA mutates to match it", "mRNA mutates independently of the DNA template", "Translation occurs before transcription in this pathway"], c:0},
+  {q:"The lecture's statement that mutations affect phenotype 'especially' within coding sequences implies:", a:["Mutations outside coding sequences are impossible", "Mutations in coding sequences are more likely to visibly affect the organism than those elsewhere", "Only RNA viruses have coding sequences", "Coding sequence mutations can never be silent"], c:1},
+  {q:"UV radiation and chemical mutagens are grouped as 'mutagenic' despite acting differently because:", a:["Both ultimately increase the rate of DNA sequence change, even though one damages DNA directly and the other disrupts base-pairing chemistry", "They act through an identical chemical mechanism", "Only UV is capable of causing mutations", "Chemical mutagens work exclusively on RNA"], c:0},
+  {q:"Comparing base substitution with insertion/deletion in terms of sequence length shows that:", a:["Substitution changes an existing base without altering the total number of bases, while insertion/deletion change that total", "All three types leave the base count identical", "Insertion always removes bases", "Substitution always changes the total base count"], c:0},
+  {q:"Why must the two strands of DNA be antiparallel, given that phosphodiester bonds link a 5'-phosphate to a 3'-OH?", a:["So that complementary bases can pair correctly along the full length of both strands, which requires the strands to run in opposite directions", "Because parallel strands would have identical base sequences", "Antiparallel orientation is unrelated to phosphodiester bond chemistry", "Because RNA strands are always parallel, unlike DNA"], c:0},
+  {q:"If a nuclease degraded BOTH strands of the donor DNA fragment during transformation, the expected outcome (based on the lecture's mechanism) would be:", a:["Transformation would proceed normally with double-stranded DNA", "No intact donor DNA would remain to enter the recipient, so transformation could not occur", "The recipient would instead perform conjugation", "RecA would repair both strands before entry"], c:1},
+  {q:"Conjugation is presented as especially effective for transferring traits like antibiotic resistance between different species mainly because, unlike the other two mechanisms, it:", a:["Does not depend on a dead donor's degraded DNA (as transformation does) or a compatible phage host range (as transduction does), since it relies only on direct cell contact", "Only occurs between identical bacterial strains", "Requires the donor bacterium to be already dead", "Cannot transfer plasmids of any kind"], c:0},
+  {q:"Tracing a conjugative plasmid's full journey, the correct order of events is:", a:["A pilus connects donor and recipient → the plasmid is processed and transferred via the relaxosome/transferosome machinery → the recipient can then become a new donor", "The recipient becomes a donor before any pilus forms", "The plasmid is destroyed once it enters the recipient", "Relaxosome and transferosome act only in the donor after transfer is complete"], c:0},
+  {q:"A 'defective phage' plays a specific role in transduction because it:", a:["Has packaged host bacterial DNA instead of, or along with, its own genome, making it the vehicle that delivers donor DNA to a new host", "Cannot infect any bacterial cell at all", "Always kills the recipient instantly", "Contains only RNA, never DNA"], c:0},
+  {q:"The restriction of specialized transduction to only certain host genes, compared with generalized transduction, follows logically from the fact that:", a:["Specialized transducing phages pick up only specific portions of host DNA, unlike the essentially random pickup in generalized transduction", "Specialized transduction never involves a bacteriophage", "Generalized transduction is limited to a single gene", "Both types transfer identical DNA fragments"], c:0},
+  {q:"Because a 'null mutation' is defined by loss of gene function rather than by a specific molecular cause, it follows that:", a:["It can only ever be caused by a base substitution", "Several different mutation types (substitution, insertion, deletion, inversion, duplication, translocation) could each independently produce one", "It cannot result from an insertion or deletion", "Null mutations are unrelated to DNA sequence changes"], c:1},
+  {q:"The alphabet analogy in the lecture supports which conclusion about genetic information?", a:["Complexity comes from the length and order of the four nucleotide types, not from having many different chemical building blocks", "More nucleotide types would be required to generate biological complexity", "The analogy shows that only proteins can carry genetic information", "Order of nucleotides is irrelevant to genetic information"], c:0},
+  {q:"RecA's role in transformation illustrates a broader principle in horizontal gene transfer because it shows that:", a:["Simply taking up foreign DNA is not sufficient; active recombination is required to permanently integrate it into the recipient's genome", "DNA uptake alone guarantees heritability", "RecA is only involved in transcription, not recombination", "Recombination is unique to conjugation"], c:0},
+  {q:"If complementary base pairing did not exist, the most direct consequence described by the lecture's logic would be:", a:["Faithful copying of the genome during replication would be undermined, threatening accurate inheritance", "Mutation rates would decrease to zero", "Bacteria would rely solely on conjugation for reproduction", "Transcription would become unnecessary"], c:0},
+  {q:"The distinct roles of genome replication versus gene expression can be summarized as:", a:["Replication preserves genetic information across generations; gene expression executes that information within a cell", "Both processes are functionally identical", "Gene expression preserves information across generations, while replication executes it", "Neither process is related to inheritance"], c:0},
+  {q:"The lecture implies that bacterial adaptability depends on both mutation and horizontal gene transfer because:", a:["Mutation only reshuffles existing genes, while HGT supplies entirely new genetic material from other bacteria, together broadening possible adaptations", "Mutation and HGT are the same underlying mechanism", "HGT makes mutation unnecessary in all cases", "Only mutation contributes meaningfully to adaptation"], c:0},
+  {q:"Comparing donor viability requirements across the three HGT mechanisms shows that:", a:["Only conjugation requires the donor cell to remain alive throughout the transfer, unlike transformation (dead donor) or transduction (phage-mediated)", "All three mechanisms require a living donor", "Transformation requires the most complex donor machinery", "Transduction never involves a bacteriophage"], c:0},
+  {q:"A conjugative plasmid's system for avoiding transfer into a recipient with a similar element most plausibly serves to:", a:["Prevent redundant or wasted transfer events into cells that would gain no new benefit", "Ensure the recipient always dies after transfer", "Force the donor cell to lose its own plasmid", "Guarantee transfer only to identical species"], c:0},
+  {q:"Describing conjugation as a 'sexual' exchange that occurs 'before' asexual reproduction implies that:", a:["Genetic material is exchanged between two cells prior to the bacterium's normal division by binary fission", "Bacteria alternate between distinct male and female life stages", "Asexual reproduction always precedes any genetic exchange", "Sexual and asexual reproduction cannot both occur in bacteria"], c:0},
+  {q:"A mutation in the DNA template is more consequential than a change confined to a single mRNA molecule because:", a:["DNA serves as the permanent template, so a DNA-level mutation is reproduced in every subsequent transcription event, unlike a one-off mRNA change", "mRNA is more stable than DNA", "DNA mutations cannot be transcribed at all", "mRNA changes are always more harmful than DNA mutations"], c:0},
+  {q:"Since nucleotides are linked 5'-phosphate to 3'-OH and synthesis starts at the 5' end, it follows that:", a:["New nucleotides must be added onto a free 3'-OH group, fixing synthesis in the 5'→3' direction", "Synthesis can proceed equally in either direction", "The 3'-OH group is irrelevant to chain extension", "Phosphate groups are added only at the 3' end"], c:0},
+  {q:"The lecture's point that only four nucleotide types exist, yet genetic information can be highly complex, is best explained by:", a:["Complexity arising from the length and order of the four bases along a strand, not from the number of base types itself", "A fifth, undiscovered base being responsible for complexity", "Each base encoding a unique amino acid directly", "Complexity requiring more than four base types"], c:0},
+  {q:"The packaging difference between generalized and specialized transducing phages suggests that:", a:["Generalized phages package host DNA fragments without positional preference, while specialized phages are constrained to specific genome regions", "Both phage types package host DNA identically", "Specialized transduction packages the entire host genome", "Generalized transduction never packages any host DNA"], c:0},
+  {q:"Spontaneous and induced mutations are alike at the molecular level because both are:", a:["Alterations of the DNA base sequence, differing only in their cause (natural process vs. deliberate mutagen treatment)", "Entirely different types of molecular change", "Restricted to RNA rather than DNA", "Impossible to reverse once they occur"], c:0},
+  {q:"Framing some conjugative elements as 'bacterial parasites' suggests that:", a:["Such elements persist and spread mainly to propagate themselves, sometimes at a cost to the host bacterium", "All conjugative elements are harmful without exception", "Parasitic elements can never be transferred by conjugation", "These elements always confer antibiotic resistance"], c:0},
+  {q:"The relationship between backbone direction and informational content in DNA is that:", a:["Bases carry the message, but the fixed 5'→3' backbone direction determines the order in which they must be read for correct interpretation", "The backbone itself carries the genetic message, not the bases", "Backbone direction has no bearing on how the genetic code is read", "Bases can be read equally well in either direction"], c:0},
+  {q:"Classifying mutation types by their effect on total base-pair count, which pair below is correctly matched?", a:["Insertion and deletion — both change the total number of bases; duplication — increases the total by adding a copy", "Substitution and translocation — both increase the total number of bases", "Inversion — always decreases the total number of bases", "Duplication — decreases the total number of bases"], c:0},
+  {q:"The shared purpose of RecA-mediated recombination (transformation) and recombination in transduction is that both:", a:["Physically integrate foreign donor DNA into the recipient's chromosome, making the transfer permanent and heritable", "Only degrade foreign DNA rather than integrating it", "Are entirely unrelated processes with no shared function", "Occur exclusively during conjugation"], c:0},
+  {q:"Conjugation is argued to cross species barriers more readily than transformation or transduction because it:", a:["Relies only on direct pilus contact, without needing a dead donor's DNA or a compatible phage host range", "Requires the exact same species for both donor and recipient", "Depends entirely on a bacteriophage's host range", "Cannot transfer any genetic material between different species"], c:0},
+  {q:"The need for scientists to use induced mutations in research follows from the fact that:", a:["DNA polymerase proofreading keeps the spontaneous mutation rate low, so mutagens are used to generate enough variants to study", "Spontaneous mutations occur too frequently to be useful", "Induced mutations are chemically identical to a completely different process", "Proofreading has no effect on spontaneous mutation frequency"], c:0},
+  {q:"An ester linkage differs from a phosphodiester linkage in the lecture's description because:", a:["An ester linkage describes bonding on only one side of the phosphate, while a phosphodiester linkage describes the complete two-sided structure", "They refer to the exact same single bond", "A phosphodiester linkage never involves ester bonds", "Ester linkages only occur in RNA, not DNA"], c:0},
+  {q:"The requirement that replication precede cell division follows from the fact that:", a:["Each daughter cell needs its own copy of the parental genome, which is only possible if the genome is fully replicated beforehand", "Only one daughter cell needs a genome copy", "Division always precedes replication in the lecture's description", "Replication is unrelated to how many daughter cells receive DNA"], c:0},
+  {q:"Because gene expression depends on both transcription and translation, a mutation affecting either step (not just the coding sequence) could:", a:["Still change whether or how much protein is produced, even without altering an amino acid directly", "Have no possible effect on protein production", "Only affect mRNA stability, never protein amount", "Be impossible according to the lecture's description"], c:0},
+  {q:"Comparing what changes in a point mutation versus a translocation shows that:", a:["A point mutation changes a single base's identity, while a translocation changes a segment's location — neither necessarily changes total genome size", "Both mutation types always increase genome size", "A translocation always changes a single base only", "A point mutation always relocates an entire DNA segment"], c:0},
+  {q:"Calling a 'null mutation' a genotypic term (rather than a phenotypic one) implies that:", a:["It is defined at the level of gene function/DNA, without necessarily specifying an observable physical trait", "It always corresponds to a specific visible phenotype", "It cannot be studied without observing the organism's appearance", "Genotype and phenotype are identical concepts in this context"], c:0},
+  {q:"The fundamental distinction between mutation and horizontal gene transfer as sources of bacterial genetic change is best described as:", a:["An internal alteration of existing DNA (mutation) versus external acquisition of DNA from another organism (HGT)", "Both processes originate from the bacterium's own existing DNA", "HGT always involves altering existing DNA sequence, not acquiring new DNA", "Mutation always requires a bacteriophage vector"], c:0},
+  {q:"Only a living, competent recipient bacterium can complete transformation because such a cell alone possesses:", a:["The surface DNA-binding proteins and active recombination machinery (like RecA) needed to take up and integrate donor DNA", "A dead donor's degraded chromosome", "A bacteriophage capsid", "A conjugative pilus"], c:0},
+  {q:"The description of a generalized transducing phage 'breaking down host DNA' without positional preference matches the definition of generalized transduction because it implies:", a:["Essentially any portion of the host genome could end up randomly packaged into a phage particle", "Only specific genes are ever broken down", "The host DNA is never actually degraded", "Generalized transduction requires no phage enzymes at all"], c:0},
+  {q:"Naming distinct intermediate structures (relaxosome, transferosome) in the conjugation diagram indicates that plasmid transfer is:", a:["A regulated, multi-step molecular process rather than passive diffusion of DNA between touching cells", "A completely random, unregulated event", "Identical in mechanism to transformation", "Driven solely by osmotic pressure"], c:0},
+  {q:"Synthesizing the lecture's overall structure, which statement best ties nucleic acid chemistry, mutation, and horizontal gene transfer together?", a:["Chemistry and base pairing explain how information is stored and copied, mutation explains how it changes within a lineage, and horizontal gene transfer explains how new information is acquired from other bacteria", "These three topics are unrelated aspects of microbiology", "Horizontal gene transfer explains inheritance, while mutation explains nucleic acid structure", "Nucleic acid chemistry has no connection to bacterial genetic variation"], c:0},
+];
+
+/* ---------- Flash cards ---------- */
 const fcGrid = document.getElementById('fcGrid');
 let flippedCount = 0;
-flashcards.forEach(([term,def])=>{
-  const card = document.createElement('div');
-  card.className='flashcard';
-  card.innerHTML = `<div class="fc-inner">
-      <div class="fc-face fc-front">${term}</div>
-      <div class="fc-face fc-back">${def}</div>
-    </div>`;
-  card.addEventListener('click',()=>{
-    const wasFlipped = card.classList.contains('flipped');
-    card.classList.toggle('flipped');
-    flippedCount += wasFlipped ? -1 : 1;
-    document.getElementById('fcCounter').textContent = flippedCount+" card"+(flippedCount===1?'':'s')+" flipped";
+let fcLevel = 'easy';
+function flashSetFor(level){
+  if(level==='med') return flashMed;
+  if(level==='hard') return flashHard;
+  return flashEasy;
+}
+function buildFlashcards(){
+  fcGrid.innerHTML = '';
+  flippedCount = 0;
+  document.getElementById('fcCounter').textContent = "0 cards flipped";
+  const set = flashSetFor(fcLevel);
+  const tall = fcLevel !== 'easy';
+  set.forEach(([term,def])=>{
+    const card = document.createElement('div');
+    card.className = tall ? 'flashcard fc-tall' : 'flashcard';
+    card.innerHTML = `<div class="fc-inner">
+        <div class="fc-face fc-front">${term}</div>
+        <div class="fc-face fc-back">${def}</div>
+      </div>`;
+    card.addEventListener('click',()=>{
+      const wasFlipped = card.classList.contains('flipped');
+      card.classList.toggle('flipped');
+      flippedCount += wasFlipped ? -1 : 1;
+      document.getElementById('fcCounter').textContent = flippedCount+" card"+(flippedCount===1?'':'s')+" flipped";
+    });
+    fcGrid.appendChild(card);
   });
-  fcGrid.appendChild(card);
-});
+}
 document.getElementById('fcReset').addEventListener('click',()=>{
   document.querySelectorAll('.flashcard').forEach(c=>c.classList.remove('flipped'));
   flippedCount = 0;
   document.getElementById('fcCounter').textContent = "0 cards flipped";
 });
+document.querySelectorAll('#fcLevelTabs button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#fcLevelTabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    fcLevel = btn.dataset.level;
+    buildFlashcards();
+  });
+});
+buildFlashcards();
 
 /* ---------- Quiz Bank ---------- */
-const quizBank = [
-  {q:"Genetics is defined as the branch of biology concerned with:", a:["Genes, genetic variation, and heredity","Cell membrane transport only","Bacterial staining techniques","Antibiotic pharmacology"], c:0},
-  {q:"The total genetic information possessed by an organism is called its:", a:["Phenotype","Genome","Proteome","Karyotype"], c:1},
-  {q:"Gene expression proceeds in which order?", a:["Translation then transcription","Transcription then translation","Replication then translation only","Translation only"], c:1},
-  {q:"The rule relating nucleotide sequence to amino acid sequence is called the:", a:["Genetic code","Reading frame law","Central axiom","Codon rule"], c:0},
-  {q:"How many components does each nucleotide have?", a:["Two","Three","Four","Five"], c:1},
-  {q:"The three components of a nucleotide are:", a:["Phosphate, sugar, base","Sugar, protein, lipid","Base, ribosome, enzyme","Phosphate, amino acid, sugar"], c:0},
-  {q:"Which base does DNA use that RNA does NOT?", a:["Adenine","Guanine","Cytosine","Thymine"], c:3},
-  {q:"Which base does RNA use in place of thymine?", a:["Uracil","Inosine","Xanthine","Cytosine"], c:0},
-  {q:"Which bases are used by BOTH DNA and RNA?", a:["Thymine and Uracil","Adenine, Cytosine, Guanine","Only Adenine","Only Guanine"], c:1},
-  {q:"The sugar-phosphate backbone of a nucleic acid strand is formed by:", a:["Bases stacking together","Hydrogen bonds between strands","Phosphate groups and sugars","Amino acid chains"], c:2},
-  {q:"The bond linking two nucleotide sugars through a phosphate group is called a:", a:["Peptide bond","Phosphodiester linkage","Glycosidic bond","Hydrogen bond"], c:1},
-  {q:"The phosphate group linking two sugars carries what charge?", a:["Positive","Neutral","Negative","Variable"], c:2},
-  {q:"The 5' end of a DNA strand is characterized by a free:", a:["Hydroxyl group","Phosphate group","Amino group","Carboxyl group"], c:1},
-  {q:"The 3' end of a DNA strand is characterized by a free:", a:["Phosphate group","Hydroxyl group","Methyl group","Sulfate group"], c:1},
-  {q:"Why is the 5' end considered the beginning of a DNA/RNA strand?", a:["It is physically longer","Genetic information is read and synthesis starts there","It has more hydrogen bonds","It contains the start codon only"], c:1},
-  {q:"The two strands of a DNA double helix are described as:", a:["Parallel","Antiparallel","Perpendicular","Randomly oriented"], c:1},
-  {q:"If one DNA strand has an A at a given position, the complementary strand will have:", a:["G","C","T","A"], c:2},
-  {q:"If one DNA strand has a G at a given position, the complementary strand will have:", a:["C","T","A","G"], c:0},
-  {q:"Complementary base pairing is significant because it:", a:["Prevents mutations entirely","Allows the sequence of one strand to be deduced from the other","Only applies to RNA","Determines cell shape"], c:1},
-  {q:"In cell division, complementary base pairing ensures that:", a:["Only one daughter cell gets DNA","Each daughter cell receives a copy of the parental genome","Mutations are eliminated","Proteins are inherited directly"], c:1},
-  {q:"A mutation that occurs naturally, without deliberate treatment, is called:", a:["An induced mutation","A spontaneous mutation","A null mutation","A silent mutation"], c:1},
-  {q:"A mutation deliberately created by treating an organism with a mutagenic agent is called:", a:["A spontaneous mutation","An induced mutation","A point mutation","A frameshift mutation"], c:1},
-  {q:"A mutation involving only a single base is called a:", a:["Null mutation","Point mutation","Frameshift mutation","Silent mutation"], c:1},
-  {q:"A mutation that totally inactivates a gene is termed a:", a:["Null mutation","Point mutation","Missense mutation","Silent mutation"], c:0},
-  {q:"Replacing one base with another base in a DNA sequence is called:", a:["Insertion","Deletion","Base substitution","Duplication"], c:2},
-  {q:"Adding one or more bases into a DNA sequence is called:", a:["Insertion","Inversion","Deletion","Translocation"], c:0},
-  {q:"Removing one or more bases from a DNA sequence is called:", a:["Duplication","Deletion","Inversion","Substitution"], c:1},
-  {q:"A DNA segment that is flipped but stays at the same overall location describes:", a:["Duplication","Translocation","Inversion","Deletion"], c:2},
-  {q:"A DNA segment that is copied, with the copy usually staying near the original, describes:", a:["Duplication","Inversion","Substitution","Insertion"], c:0},
-  {q:"A DNA segment moving to a new position on the same or a different DNA molecule describes:", a:["Inversion","Duplication","Translocation","Deletion"], c:2},
-  {q:"Low error rates during DNA replication are mainly due to:", a:["Slow replication speed","The proofreading ability of DNA polymerase","High cellular temperature","Absence of mutagens"], c:1},
-  {q:"UV radiation causes mutations primarily by:", a:["Interfering with base-pairing chemically","Directly damaging DNA structure","Adding extra phosphate groups","Removing the sugar backbone"], c:1},
-  {q:"How many mechanisms of horizontal gene transfer exist in bacteria?", a:["Two","Three","Four","Five"], c:1},
-  {q:"The three mechanisms of horizontal gene transfer in bacteria are:", a:["Mitosis, meiosis, fusion","Transformation, transduction, conjugation","Replication, translation, transcription","Diffusion, osmosis, endocytosis"], c:1},
-  {q:"Which mechanism is the most common for horizontal gene transfer, especially between different bacterial species?", a:["Transformation","Transduction","Conjugation","Mutation"], c:2},
-  {q:"In transformation, the DNA that enters the recipient bacterium originates from:", a:["A living bacteriophage","A dead, degraded donor bacterium","The recipient's own genome","A mitochondrion"], c:1},
-  {q:"During transformation, which protein promotes genetic exchange between donor and recipient DNA?", a:["RecA protein","DNA polymerase III","RNA polymerase","Ligase A"], c:0},
-  {q:"Transduction is the transfer of bacterial genetic material by way of a:", a:["Plasmid","Bacteriophage (virus)","Pilus","Nucleoid"], c:1},
-  {q:"In generalized transduction, the bacteriophage:", a:["Can pick up any portion of the host genome","Can only pick up specific portions of the genome","Cannot carry host DNA at all","Only transfers plasmids"], c:0},
-  {q:"In specialized transduction, the bacteriophage:", a:["Picks up any random DNA fragment","Picks up only specific portions of the host's DNA","Never infects a new host","Transfers RNA only"], c:1},
-  {q:"Bacterial conjugation transfers genetic material via:", a:["Airborne transmission","Direct cell-to-cell contact through a pilus","Spontaneous mutation","Viral infection"], c:1},
-  {q:"The genetic element most often transferred during conjugation is a:", a:["Ribosome","Plasmid or transposon","Mitochondrion","Cell wall fragment"], c:1},
-  {q:"A benefit that conjugation-transferred genes often provide to the recipient includes:", a:["Antibiotic resistance","Loss of a cell wall","Permanent sterility","Reduced replication rate"], c:0},
-  {q:"According to the lecture, in bacteria the exchange of genetic material (a form of \"sexual\" reproduction) occurs:", a:["After asexual reproduction","Before asexual reproduction","Only during sporulation","Never in bacteria"], c:1}
-];
-
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -889,9 +1162,16 @@ function shuffle(arr){
 }
 
 let answeredCount = 0, correctCount = 0;
+let quizLevel = 'easy';
 const quizListEl = document.getElementById('quizList');
+function quizSetFor(level){
+  if(level==='med') return quizMed;
+  if(level==='hard') return quizHard;
+  return quizEasy;
+}
 
 function buildQuiz(){
+  const quizBank = quizSetFor(quizLevel);
   quizListEl.innerHTML = '';
   answeredCount = 0; correctCount = 0;
   document.getElementById('qsScore').textContent = '0';
@@ -936,6 +1216,14 @@ function buildQuiz(){
     quizListEl.appendChild(card);
   });
 }
+document.querySelectorAll('#qLevelTabs button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#qLevelTabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    quizLevel = btn.dataset.level;
+    buildQuiz();
+  });
+});
 document.getElementById('qReshuffle').addEventListener('click', buildQuiz);
 buildQuiz();
 </script>
